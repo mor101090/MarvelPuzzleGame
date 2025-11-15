@@ -1,0 +1,48 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: white;
+  text-align: center;
+}
+
+#puzzle {
+  margin: 20px auto;
+  width: 400px;
+  height: 400px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 3px solid #fff;
+}
+
+.tile {
+  border: 1px solid #444;
+  background-size: 400px 400px;
+  cursor: pointer;
+}
+
+.tile.correct {
+  outline: 2px solid lime;
+}
+
+#winMessage {
+  display: none;
+  margin-top: 20px;
+}
+
+<style>
+  .marvel-logo {
+    background: #ED1D24;
+    display: inline-block;
+    padding: 10px 25px;
+    margin-top: 20px;
+    border: 3px solid #FFFFFF;
+  }
+
+  .marvel-text {
+    color: #FFFFFF;
+    font-family: Impact, Arial Black, sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+  }
+</style>
