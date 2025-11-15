@@ -7,7 +7,7 @@ const nextLevelBtn = document.getElementById("nextLevelBtn");
 // שים לב: ודא שקיימים הקבצים האלה בתיקייה ליד index.html
 const levels = [
   { image: "level3.jpeg", grid: 3 }, // Level 1 - 3x3
-  { image: "level4.JPG",  grid: 4 }  // Level 2 - 4x4 (יותר חלקים)
+  { image: "level4.jpg",  grid: 4 }  // Level 2 - 4x4 (יותר חלקים)
 ];
 
 let currentLevelIndex = 0;
@@ -293,3 +293,4 @@ if (nextLevelBtn) {
 // ------------------ התחלת המשחק ------------------
 
 loadLevel(0);
+
