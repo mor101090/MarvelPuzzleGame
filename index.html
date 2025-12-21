@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="he">
+  <style>
+  .marvel-logo {
+    background: #ED1D24;
+    display: inline-block;
+    padding: 10px 25px;
+    margin-top: 20px;
+    border: 3px solid #FFFFFF;
+  }
+
+  .marvel-text {
+    color: #FFFFFF;
+    font-family: Impact, Arial Black, sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+  }
+    .tile.selected {
+    box-shadow: 0 0 10px #ffffff;
+    border-color: #ffffff;
+  }
+  .tile.connected {
+    border-color: #00ff00; /* חלקים במקום הנכון מסומנים בירוק לדוגמה */
+    box-shadow: 0 0 8px #00ff00;
+  }
+
+</style>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Puzzle Game</title>
+</head>
+<body style="background:rgb(255, 255, 255); color:rgb(147, 23, 23); text-align:center;">
+
+  <div class="marvel-logo">
+  <span class="marvel-text">MARVEL</span>
+</div>
+  <div id="puzzle"></div>
+    <div id="winMessage" style="margin-top:10px; display:none; color:#00ff00; font-size:22px;">
+    YOU WON!
+  </div>
+  
+    <button id="nextLevelBtn" style="margin-top:10px; display:none;">
+    NEXT LEVEL
+  </button>
+
+
+  <script src="game.js"></script>
+</body>
+</html>
