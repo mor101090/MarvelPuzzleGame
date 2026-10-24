@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.10.0] (`@@0.10.0`) - Gallery on the home screen
+## [0.10.0] (`e1fecb3`) - Gallery on the home screen
 ### Added
 - **Gallery** button on the home screen, in the same style as Play and Choose
   Level (`assets/ui/Gallery.png`, made from the Choose Level button).
