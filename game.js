@@ -16,6 +16,14 @@ const levelsBackBtn = document.getElementById("levelsBackBtn");
 const levelLabel = document.getElementById("levelLabel");
 const movesCount = document.getElementById("movesCount");
 const hudStars = document.getElementById("hudStars");
+const galleryScreen = document.getElementById("galleryScreen");
+const galleryList = document.getElementById("galleryList");
+const galleryCount = document.getElementById("galleryCount");
+const galleryBtn = document.getElementById("galleryBtn");
+const galleryBackBtn = document.getElementById("galleryBackBtn");
+const viewerModal = document.getElementById("viewerModal");
+const viewerImg = document.getElementById("viewerImg");
+const viewerCaption = document.getElementById("viewerCaption");
 const winModal = document.getElementById("winModal");
 const winTitle = document.getElementById("winTitle");
 const winStars = document.getElementById("winStars");
@@ -182,7 +190,8 @@ function nextPlayableLevel() {
 function showScreen(screen) {
   cancelDrag();
   closeWinScreen();
-  [homeScreen, levelScreen, gameScreen].forEach(el => {
+  closeViewer();
+  [homeScreen, levelScreen, galleryScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
 }
@@ -194,6 +203,11 @@ function showHome() {
 function showLevels() {
   renderLevelSelect();
   showScreen(levelScreen);
+}
+
+function showGallery() {
+  renderGallery();
+  showScreen(galleryScreen);
 }
 
 function showGame() {
@@ -216,6 +230,8 @@ backBtn?.addEventListener("click", () => {
 
 chooseLevelBtn?.addEventListener("click", showLevels);
 levelsBackBtn?.addEventListener("click", showHome);
+galleryBtn?.addEventListener("click", showGallery);
+galleryBackBtn?.addEventListener("click", showLevels);
 
 // =====================
 // Level Select
@@ -290,6 +306,85 @@ function renderLevelSelect() {
     levelList.appendChild(section);
   });
 }
+
+// =====================
+// Gallery (תמונות ששוחררו בפתרון שלב)
+// =====================
+function renderGallery() {
+  galleryList.innerHTML = "";
+
+  const solved = levels.filter((_, i) => isCompleted(i)).length;
+  galleryCount.textContent = `${solved} / ${levels.length} PICTURES`;
+
+  categories.forEach(category => {
+    const section = document.createElement("section");
+
+    const title = document.createElement("h2");
+    title.className = "category-title";
+    title.textContent = category.name;
+    section.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "level-grid";
+
+    levels.forEach((level, index) => {
+      if (level.category !== category.id) return;
+
+      const done = isCompleted(index);
+      const best = getBest(index);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "gallery-card" + (done ? "" : " is-locked");
+      card.setAttribute("aria-label", done ? `Level ${index + 1} picture` : `Level ${index + 1} picture, locked`);
+
+      if (done) {
+        card.style.backgroundImage = `url('${level.image}')`;
+        card.innerHTML =
+          `<span class="gallery-tag">LEVEL ${index + 1}` +
+          (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
+          `</span>`;
+        card.addEventListener("click", () => openViewer(index));
+      } else {
+        card.innerHTML =
+          LOCK_SVG +
+          `<span class="gallery-tag">LEVEL ${index + 1}</span>`;
+        card.addEventListener("click", () => {
+          playSound("invalid");
+          vibrate([15, 40, 15]);
+          card.classList.remove("shake");
+          void card.offsetWidth;
+          card.classList.add("shake");
+        });
+      }
+
+      grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    galleryList.appendChild(section);
+  });
+}
+
+function openViewer(index) {
+  const best = getBest(index);
+  viewerImg.src = levels[index].image;
+  viewerImg.alt = `Level ${index + 1}`;
+  viewerCaption.innerHTML =
+    `<span>LEVEL ${index + 1}</span>` +
+    (best
+      ? `<span class="stars">${starsHtml(best.stars)}</span><span>${best.moves} ${best.moves === 1 ? "move" : "moves"}</span>`
+      : "");
+  viewerModal.classList.remove("hidden");
+}
+
+function closeViewer() {
+  viewerModal?.classList.add("hidden");
+}
+
+viewerModal?.addEventListener("click", closeViewer);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeViewer();
+});
 
 // =====================
 // Level Loader

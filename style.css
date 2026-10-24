@@ -532,3 +532,119 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 @media (prefers-reduced-motion: reduce){
   .win-stars .star.is-on{ animation: none; }
 }
+
+/* ===== GALLERY ===== */
+.levels-top .gallery-btn{
+  justify-self: end;
+}
+
+.gallery-count{
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+}
+
+.gallery-card{
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 2px solid #000;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #E23636 center/cover no-repeat;
+  box-shadow: 0 10px 16px rgba(0,0,0,0.45);
+  cursor: pointer;
+  font: inherit;
+}
+
+.gallery-card:active{
+  transform: scale(0.97);
+}
+
+.gallery-card:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.gallery-card.is-locked{
+  background: #5a5657;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+  cursor: not-allowed;
+}
+
+.gallery-card.shake{
+  animation: shake 0.3s;
+}
+
+.gallery-tag{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.75));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.gallery-tag .star{
+  width: 20px;
+  height: 20px;
+}
+
+.gallery-card.is-locked .gallery-tag{
+  background: none;
+  opacity: 0.6;
+}
+
+.gallery-card.is-locked .level-lock{
+  top: 22%;
+}
+
+/* ===== PICTURE VIEWER ===== */
+.viewer{
+  margin: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewer img{
+  max-width: 100%;
+  max-height: 70vh;
+  border: 3px solid #ED1D24;
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+  background: #141414;
+}
+
+.viewer figcaption{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.viewer-hint{
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.55);
+}

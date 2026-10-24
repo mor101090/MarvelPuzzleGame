@@ -32,9 +32,21 @@
     <div class="levels-top">
       <button id="levelsBackBtn" class="text-btn" type="button">← Back</button>
       <h1 class="levels-title">CHOOSE LEVEL</h1>
+      <button id="galleryBtn" class="text-btn gallery-btn" type="button">Gallery</button>
     </div>
 
     <div id="levelList" class="level-list"></div>
+  </main>
+
+  <!-- GALLERY SCREEN -->
+  <main id="galleryScreen" class="screen levels hidden">
+    <div class="levels-top">
+      <button id="galleryBackBtn" class="text-btn" type="button">← Back</button>
+      <h1 class="levels-title">GALLERY</h1>
+    </div>
+
+    <p id="galleryCount" class="gallery-count"></p>
+    <div id="galleryList" class="level-list"></div>
   </main>
 
   <!-- GAME SCREEN -->
@@ -82,6 +94,15 @@
 
       <button id="closeSettingsBtn" class="next" type="button">DONE</button>
     </div>
+  </div>
+
+  <!-- GALLERY VIEWER -->
+  <div id="viewerModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Picture">
+    <figure class="viewer">
+      <img id="viewerImg" alt="" />
+      <figcaption id="viewerCaption"></figcaption>
+      <span class="viewer-hint">Tap anywhere to close</span>
+    </figure>
   </div>
 
   <!-- WIN SCREEN -->
