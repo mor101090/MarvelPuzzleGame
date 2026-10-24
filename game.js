@@ -10,14 +10,23 @@ const gameScreen = document.getElementById("gameScreen");
 const playBtn = document.getElementById("playBtn");
 const backBtn = document.getElementById("backBtn");
 const chooseLevelBtn = document.getElementById("chooseLevelBtn");
+const levelScreen = document.getElementById("levelScreen");
+const levelList = document.getElementById("levelList");
+const levelsBackBtn = document.getElementById("levelsBackBtn");
+const levelLabel = document.getElementById("levelLabel");
 
 // =====================
 // Levels
 // =====================
 // IMPORTANT: GitHub Pages case-sensitive
+// קטגוריות: כדי להוסיף קטגוריה קשה יותר - מוסיפים כאן ומסמנים category בשלבים
+const categories = [
+  { id: "easy", name: "Easy" }
+];
+
 const levels = [
-  { image: "level3.jpeg", grid: 3 },
-  { image: "level4.jpg",  grid: 4 } // אם הקובץ שלך באמת level4.JPG תשנה כאן ל-"level4.JPG"
+  { image: "level3.jpeg", grid: 3, category: "easy" },
+  { image: "level4.jpg",  grid: 4, category: "easy" } // אם הקובץ שלך באמת level4.JPG תשנה כאן ל-"level4.JPG"
 ];
 
 let currentLevelIndex = 0;
@@ -58,24 +67,73 @@ let started = false;
 let loadToken = 0;
 
 // =====================
+// Progress (נשמר במכשיר)
+// =====================
+const PROGRESS_KEY = "marvelPuzzle.progress";
+
+// completed = רשימת אינדקסים של שלבים שנפתרו
+const progress = { completed: [], ...loadProgress() };
+
+function loadProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+    return Array.isArray(saved?.completed) ? { completed: saved.completed } : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  } catch {
+    // אחסון חסום - ההתקדמות תחזיק עד רענון
+  }
+}
+
+function isCompleted(index) {
+  return progress.completed.includes(index);
+}
+
+// שלב נפתח אם הוא הראשון, או שהקודם לו נפתר
+function isUnlocked(index) {
+  return index === 0 || isCompleted(index - 1);
+}
+
+// השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
+function nextPlayableLevel() {
+  const i = levels.findIndex((_, idx) => !isCompleted(idx));
+  return i === -1 ? levels.length - 1 : i;
+}
+
+// =====================
 // Screen Navigation
 // =====================
-function showHome() {
+function showScreen(screen) {
   cancelDrag();
-  homeScreen?.classList.remove("hidden");
-  gameScreen?.classList.add("hidden");
+  [homeScreen, levelScreen, gameScreen].forEach(el => {
+    el?.classList.toggle("hidden", el !== screen);
+  });
+}
+
+function showHome() {
+  showScreen(homeScreen);
+}
+
+function showLevels() {
+  renderLevelSelect();
+  showScreen(levelScreen);
 }
 
 function showGame() {
-  homeScreen?.classList.add("hidden");
-  gameScreen?.classList.remove("hidden");
+  showScreen(gameScreen);
 }
 
 playBtn?.addEventListener("click", () => {
   showGame();
   if (!started) {
     started = true;
-    loadLevel(0);
+    loadLevel(nextPlayableLevel());
   } else {
     layoutPuzzle();
   }
@@ -85,9 +143,73 @@ backBtn?.addEventListener("click", () => {
   showHome();
 });
 
-chooseLevelBtn?.addEventListener("click", () => {
-  // כרגע לא פעיל - נשאיר להמשך
-});
+chooseLevelBtn?.addEventListener("click", showLevels);
+levelsBackBtn?.addEventListener("click", showHome);
+
+// =====================
+// Level Select
+// =====================
+const LOCK_SVG = `
+  <svg class="level-lock" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"
+      d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/>
+  </svg>`;
+
+const CHECK_SVG = `
+  <span class="level-check" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path fill="none" stroke="#1a9a4a" stroke-width="4"
+      stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+  </span>`;
+
+function renderLevelSelect() {
+  levelList.innerHTML = "";
+
+  categories.forEach(category => {
+    const section = document.createElement("section");
+
+    const title = document.createElement("h2");
+    title.className = "category-title";
+    title.textContent = category.name;
+    section.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "level-grid";
+
+    levels.forEach((level, index) => {
+      if (level.category !== category.id) return;
+
+      const locked = !isUnlocked(index);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "level-card" + (locked ? " is-locked" : "");
+      card.dataset.index = index;
+      card.setAttribute("aria-label",
+        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" : ""));
+      card.innerHTML =
+        `<span class="level-card-num">${index + 1}</span>` +
+        (locked ? LOCK_SVG : isCompleted(index) ? CHECK_SVG : "");
+
+      card.addEventListener("click", () => {
+        if (locked) {
+          playSound("invalid");
+          vibrate([15, 40, 15]);
+          card.classList.remove("shake");
+          void card.offsetWidth; // מאתחל את האנימציה
+          card.classList.add("shake");
+          return;
+        }
+        started = true;
+        showGame();
+        loadLevel(index);
+      });
+
+      grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    levelList.appendChild(section);
+  });
+}
 
 // =====================
 // Level Loader
@@ -96,6 +218,7 @@ function loadLevel(index) {
   currentLevelIndex = index;
   currentImageSrc = levels[index].image;
   gridSize = levels[index].grid;
+  if (levelLabel) levelLabel.textContent = `LEVEL ${index + 1}`;
 
   gameOver = false;
   cancelDrag();
@@ -502,6 +625,11 @@ function checkWin() {
   if (!isSolved()) return;
 
   gameOver = true;
+
+  if (!isCompleted(currentLevelIndex)) {
+    progress.completed.push(currentLevelIndex);
+    saveProgress();
+  }
 
   tiles.forEach(tile => {
     tile.style.boxShadow = "none";

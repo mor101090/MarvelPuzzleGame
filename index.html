@@ -21,16 +21,27 @@
         <img src="assets/ui/Play.png" alt="PLAY" />
       </button>
 
-      <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level" disabled>
+      <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level">
         <img src="assets/ui/ChooseLevel.png" alt="CHOOSE LEVEL" />
       </button>
     </div>
+  </main>
+
+  <!-- LEVEL SELECT SCREEN -->
+  <main id="levelScreen" class="screen levels hidden">
+    <div class="levels-top">
+      <button id="levelsBackBtn" class="text-btn" type="button">← Back</button>
+      <h1 class="levels-title">CHOOSE LEVEL</h1>
+    </div>
+
+    <div id="levelList" class="level-list"></div>
   </main>
 
   <!-- GAME SCREEN -->
   <main id="gameScreen" class="screen game hidden">
     <div class="game-top">
       <button id="backBtn" class="text-btn" type="button">← Back</button>
+      <div id="levelLabel" class="level-label">LEVEL 1</div>
       <button class="icon-btn icon-btn--small" aria-label="Settings" type="button" data-open-settings>
         <img src="assets/ui/Preference.png" alt="" />
       </button>
