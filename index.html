@@ -50,7 +50,7 @@
     <div id="puzzleWrap">
       <div class="hud">
         <span class="hud-moves">MOVES <b id="movesCount">0</b></span>
-        <span id="hudStars" class="stars hud-stars" aria-label="Current rating"></span>
+        <span id="hudStars" class="stars hud-stars" aria-label="Difficulty"></span>
       </div>
 
       <div id="puzzle"></div>
@@ -89,7 +89,7 @@
     <figure class="viewer">
       <img id="viewerImg" alt="" />
       <figcaption id="viewerCaption"></figcaption>
-      <button id="viewerPlayBtn" class="next" type="button">PLAY AGAIN</button>
+      <div id="viewerLevels" class="diff-row"></div>
       <span class="viewer-hint">Tap outside to close</span>
     </figure>
   </div>
@@ -104,6 +104,7 @@
       <button id="winNextBtn" class="next" type="button">NEXT LEVEL</button>
       <div class="win-row">
         <button id="winReplayBtn" class="text-btn" type="button">↻ Replay</button>
+        <button id="winHarderBtn" class="text-btn" type="button">▲ Medium</button>
         <button id="winLevelsBtn" class="text-btn" type="button">Levels</button>
       </div>
     </div>

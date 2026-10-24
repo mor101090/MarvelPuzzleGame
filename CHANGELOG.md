@@ -4,6 +4,25 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.15.0] (`@@0.15.0`) - Difficulty levels instead of move stars
+### Added
+- Every level has **Easy**, **Medium** and **Hard**. Medium has twice the pieces
+  of Easy and Hard has twice the pieces of Medium (for example 9, 18, 36 pieces,
+  or 16, 32, 64). The grid is chosen per picture so the pieces stay close to square.
+- **Stars = difficulty cleared**: 1 star for Easy, 2 for Medium, 3 for Hard.
+- Medium opens after Easy is solved, and Hard after Medium.
+- Tap a solved level in Choose Level to see its picture and pick a difficulty.
+- The win screen has a button for the next difficulty (Medium or Hard).
+- The game screen shows the difficulty under `LEVEL N`.
+### Changed
+- Stars no longer depend on the number of moves. The move counter stays as
+  information only.
+- The next level still opens after its Easy is solved.
+- Progress is saved as the highest difficulty solved per level. Older saves are
+  converted: a solved level counts as Easy solved.
+### Removed
+- Best move count and the NEW BEST message.
+
 ## [0.14.0] (`c88b08e`) - No spoilers
 ### Removed
 - **Preview** button. The player now has to work out the picture.

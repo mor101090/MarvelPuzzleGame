@@ -19,7 +19,7 @@ const hudStars = document.getElementById("hudStars");
 const viewerModal = document.getElementById("viewerModal");
 const viewerImg = document.getElementById("viewerImg");
 const viewerCaption = document.getElementById("viewerCaption");
-const viewerPlayBtn = document.getElementById("viewerPlayBtn");
+const viewerLevels = document.getElementById("viewerLevels");
 const winModal = document.getElementById("winModal");
 const winTitle = document.getElementById("winTitle");
 const winStars = document.getElementById("winStars");
@@ -27,11 +27,19 @@ const winStats = document.getElementById("winStats");
 const winNextBtn = document.getElementById("winNextBtn");
 const winReplayBtn = document.getElementById("winReplayBtn");
 const winLevelsBtn = document.getElementById("winLevelsBtn");
+const winHarderBtn = document.getElementById("winHarderBtn");
 
 // =====================
 // Levels
 // =====================
 // IMPORTANT: GitHub Pages case-sensitive
+// רמות קושי לכל שלב: מספר החלקים בבינוני הוא פי 2 מהקל, ובקשה פי 2 מהבינוני.
+// הכוכבים של השלב = הרמה הגבוהה ביותר שנפתרה (1 קל, 2 בינוני, 3 קשה).
+const DIFFICULTIES = [
+  { name: "Easy",   factor: 1 },
+  { name: "Medium", factor: 2 },
+  { name: "Hard",   factor: 4 }
+];
 // קטגוריות: כדי להוסיף קטגוריה קשה יותר - מוסיפים כאן ומסמנים category בשלבים
 const categories = [
   { id: "easy", name: "Easy" }
@@ -54,7 +62,9 @@ const levels = [
 
 let currentLevelIndex = 0;
 let currentImageSrc = levels[0].image;
-let gridSize = levels[0].grid;
+let currentDifficulty = 1;   // 1 קל, 2 בינוני, 3 קשה
+let cols = levels[0].grid;
+let rows = levels[0].grid;
 let imageAspect = 1;
 
 // Puzzle sizing
@@ -99,24 +109,31 @@ let winStarTimers = [];
 // =====================
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
-// completed = id של שלבים שנפתרו
-// best = התוצאה הטובה ביותר לכל שלב: { "level3": { moves: 12, stars: 3 } }
-// שני השלבים הראשונים בגרסאות הישנות נשמרו לפי מספר - מתרגמים אותם ל-id
+// level = { "level3": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
+// שמירות ישנות: version 1 נשמרו לפי אינדקס, version 2 לפי id עם כוכבי מהלכים
 const LEGACY_IDS = ["level3", "level4"];
 
-const progress = { completed: [], best: {}, ...loadProgress() };
+const progress = { level: {}, ...loadProgress() };
 
 function loadProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
-    if (!Array.isArray(saved?.completed)) return {};
-    // שמירה ישנה (בלי version) נשמרה לפי אינדקס - מתרגמים ל-id
-    const legacy = !saved.version;
-    const toId = (key) => (legacy && LEGACY_IDS[key]) || String(key);
-    const best = {};
-    Object.entries(saved.best && typeof saved.best === "object" ? saved.best : {})
-      .forEach(([key, value]) => { best[toId(key)] = value; });
-    return { completed: saved.completed.map(toId), best };
+    if (!saved) return {};
+
+    if (saved.version === 3 && saved.level && typeof saved.level === "object") {
+      return { level: saved.level };
+    }
+
+    // המרה מהפורמט הישן: כל שלב שנפתר נחשב כקל שנפתר
+    if (Array.isArray(saved.completed)) {
+      const legacy = !saved.version;
+      const level = {};
+      saved.completed.forEach(key => {
+        level[(legacy && LEGACY_IDS[key]) || String(key)] = 1;
+      });
+      return { level };
+    }
+    return {};
   } catch {
     return {};
   }
@@ -124,50 +141,60 @@ function loadProgress() {
 
 function saveProgress() {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 2, ...progress }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 3, ...progress }));
   } catch {
     // אחסון חסום - ההתקדמות תחזיק עד רענון
   }
 }
 
+// הרמה הגבוהה ביותר שנפתרה בשלב (0-3) = מספר הכוכבים
+function getStars(index) {
+  return progress.level[levels[index].id] || 0;
+}
+
 function isCompleted(index) {
-  return progress.completed.includes(levels[index].id);
+  return getStars(index) >= 1;
 }
 
-function getBest(index) {
-  return progress.best[levels[index].id] || null;
+// רמה נפתחת אחרי שהרמה שלפניה נפתרה
+function isDifficultyUnlocked(index, difficulty) {
+  return difficulty === 1 || getStars(index) >= difficulty - 1;
 }
 
-// שומר תוצאה ומחזיר true אם זה שיא חדש
-function recordResult(index, moves, stars) {
-  if (!isCompleted(index)) progress.completed.push(levels[index].id);
-
-  const prev = getBest(index);
-  const isNewBest = !prev || moves < prev.moves;
-  if (isNewBest) {
-    progress.best[levels[index].id] = { moves, stars };
+function recordResult(index, difficulty) {
+  const id = levels[index].id;
+  if (difficulty > (progress.level[id] || 0)) {
+    progress.level[id] = difficulty;
+    saveProgress();
   }
-  saveProgress();
-  return isNewBest;
+}
+
+// מספר החלקים ברמה (הקל = רשת בגודל grid x grid)
+function pieceCount(index, difficulty) {
+  const base = levels[index].grid * levels[index].grid;
+  return base * DIFFICULTIES[difficulty - 1].factor;
+}
+
+// בוחר cols x rows שמכפלתם בדיוק מספר החלקים, כך שהחלקים יהיו הכי קרובים לריבוע
+function gridFor(index, difficulty, aspect) {
+  const n = pieceCount(index, difficulty);
+  if (difficulty === 1) return { cols: levels[index].grid, rows: levels[index].grid };
+
+  let best = null;
+  for (let c = 2; c <= n / 2; c++) {
+    if (n % c) continue;
+    const r = n / c;
+    const tileAspect = aspect * r / c; // רוחב/גובה של חלק
+    const score = Math.abs(Math.log(tileAspect));
+    if (!best || score < best.score) best = { cols: c, rows: r, score };
+  }
+  return best || { cols: levels[index].grid, rows: levels[index].grid };
 }
 
 // =====================
 // Moves + Stars
 // =====================
 let moves = 0;
-
-// 3 כוכבים עד ~1.5 מהלכים לחלק, 2 כוכבים עד ~2.5 (אפשר לדרוס בשלב: starMoves: [3כוכבים, 2כוכבים])
-function starLimits(index) {
-  const custom = levels[index].starMoves;
-  if (custom) return { three: custom[0], two: custom[1] };
-  const n = levels[index].grid * levels[index].grid;
-  return { three: Math.ceil(n * 1.5), two: Math.ceil(n * 2.5) };
-}
-
-function starsForMoves(index, count) {
-  const { three, two } = starLimits(index);
-  return count <= three ? 3 : count <= two ? 2 : 1;
-}
 
 const STAR_PATH = "M12 2.3l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.4l-6 3.3 1.3-6.7-5-4.7 6.8-.8z";
 
@@ -182,7 +209,11 @@ function starsHtml(count, total = 3) {
 
 function updateHud() {
   if (movesCount) movesCount.textContent = moves;
-  if (hudStars) hudStars.innerHTML = starsHtml(starsForMoves(currentLevelIndex, moves));
+  if (hudStars) hudStars.innerHTML = starsHtml(currentDifficulty);
+  if (levelLabel) {
+    levelLabel.innerHTML =
+      `LEVEL ${currentLevelIndex + 1}<small>${DIFFICULTIES[currentDifficulty - 1].name}</small>`;
+  }
 }
 
 // שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
@@ -225,7 +256,7 @@ playBtn?.addEventListener("click", () => {
   showGame();
   if (!started) {
     started = true;
-    loadLevel(nextPlayableLevel());
+    loadLevel(nextPlayableLevel(), 1);
   } else {
     layoutPuzzle();
   }
@@ -252,10 +283,10 @@ const PLAY_SVG = `
     <path fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round" d="M7 3.5v17l14-8.5z"/>
   </svg>`;
 
-function startLevel(index) {
+function startLevel(index, difficulty = 1) {
   started = true;
   showGame();
-  loadLevel(index);
+  loadLevel(index, difficulty);
 }
 
 function renderLevelSelect() {
@@ -279,18 +310,18 @@ function renderLevelSelect() {
       const card = document.createElement("button");
       card.type = "button";
       const solved = !locked && isCompleted(index);
-      const best = getBest(index);
+      const stars = getStars(index);
       card.className = "level-card" + (locked ? " is-locked" : solved ? " has-picture" : " is-open");
       card.dataset.index = index;
       card.setAttribute("aria-label",
-        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" + (getBest(index) ? `, ${getBest(index).stars} stars` : "") : ""));
+        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? `, ${stars} of 3 stars` : ""));
 
       if (solved) {
         // שלב שנפתר: התמונה עצמה, עם מספר השלב והכוכבים
         card.style.backgroundImage = `url('${level.thumb}')`;
         card.innerHTML =
           `<span class="level-tag">LEVEL ${index + 1}` +
-          (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
+          `<span class="stars">${starsHtml(stars)}</span>` +
           `</span>`;
       } else if (locked) {
         card.innerHTML = LOCK_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
@@ -330,15 +361,40 @@ function renderLevelSelect() {
 let viewerIndex = -1;
 
 function openViewer(index) {
-  const best = getBest(index);
   viewerIndex = index;
   viewerImg.src = levels[index].image;
   viewerImg.alt = `Level ${index + 1}`;
   viewerCaption.innerHTML =
-    `<span>LEVEL ${index + 1}</span>` +
-    (best
-      ? `<span class="stars">${starsHtml(best.stars)}</span><span>${best.moves} ${best.moves === 1 ? "move" : "moves"}</span>`
-      : "");
+    `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`;
+
+  // כפתורי רמות: קל / בינוני / קשה (נפתחות לפי הסדר)
+  viewerLevels.innerHTML = "";
+  DIFFICULTIES.forEach((d, i) => {
+    const difficulty = i + 1;
+    const unlocked = isDifficultyUnlocked(index, difficulty);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "diff-btn" + (unlocked ? "" : " is-locked") + (getStars(index) >= difficulty ? " is-done" : "");
+    btn.innerHTML =
+      `<span class="diff-name">${d.name}</span>` +
+      `<small>${pieceCount(index, difficulty)} pieces</small>` +
+      (unlocked ? "" : LOCK_SVG);
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!unlocked) {
+        playSound("invalid");
+        vibrate([15, 40, 15]);
+        btn.classList.remove("shake");
+        void btn.offsetWidth;
+        btn.classList.add("shake");
+        return;
+      }
+      closeViewer();
+      startLevel(index, difficulty);
+    });
+    viewerLevels.appendChild(btn);
+  });
+
   viewerModal.classList.remove("hidden");
 }
 
@@ -347,12 +403,6 @@ function closeViewer() {
 }
 
 viewerModal?.addEventListener("click", closeViewer);
-viewerPlayBtn?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  const index = viewerIndex;
-  closeViewer();
-  if (index >= 0) startLevel(index);
-});
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeViewer();
 });
@@ -360,11 +410,10 @@ document.addEventListener("keydown", (e) => {
 // =====================
 // Level Loader
 // =====================
-function loadLevel(index) {
+function loadLevel(index, difficulty = 1) {
   currentLevelIndex = index;
+  currentDifficulty = difficulty;
   currentImageSrc = levels[index].image;
-  gridSize = levels[index].grid;
-  if (levelLabel) levelLabel.textContent = `LEVEL ${index + 1}`;
 
   gameOver = false;
   moves = 0;
@@ -385,6 +434,7 @@ function loadLevel(index) {
     if (token !== loadToken) return;
 
     imageAspect = img.naturalWidth / img.naturalHeight;
+    ({ cols, rows } = gridFor(index, difficulty, imageAspect));
 
     createTiles();
     shuffleTiles();
@@ -419,8 +469,8 @@ function layoutPuzzle() {
     puzzleWidth = size * imageAspect;
   }
 
-  const tileWidth = puzzleWidth / gridSize;
-  const tileHeight = puzzleHeight / gridSize;
+  const tileWidth = puzzleWidth / cols;
+  const tileHeight = puzzleHeight / rows;
 
   // content-box: הגבול נוסף מסביב ולא "אוכל" מהאריחים
   puzzle.style.boxSizing = "content-box";
@@ -428,14 +478,14 @@ function layoutPuzzle() {
   puzzle.style.height = puzzleHeight + "px";
   puzzle.style.margin = "12px auto";
   puzzle.style.display = "grid";
-  puzzle.style.gridTemplateColumns = `repeat(${gridSize}, ${tileWidth}px)`;
+  puzzle.style.gridTemplateColumns = `repeat(${cols}, ${tileWidth}px)`;
   puzzle.style.gridAutoRows = `${tileHeight}px`;
   puzzle.style.border = `${boardBorder}px solid #ED1D24`;
 
   tiles.forEach(tile => {
     const i = parseInt(tile.dataset.correctIndex, 10);
-    const x = i % gridSize;
-    const y = Math.floor(i / gridSize);
+    const x = i % cols;
+    const y = Math.floor(i / cols);
     tile.style.width = tileWidth + "px";
     tile.style.height = tileHeight + "px";
     tile.style.backgroundSize = `${puzzleWidth}px ${puzzleHeight}px`;
@@ -454,7 +504,7 @@ function createTiles() {
   cancelDrag();
   gameOver = false;
 
-  for (let i = 0; i < gridSize * gridSize; i++) {
+  for (let i = 0; i < cols * rows; i++) {
     const tile = document.createElement("div");
     tile.className = "tile";
 
@@ -503,7 +553,7 @@ function renderTiles() {
 // Connected pieces
 // =====================
 function cellOf(index) {
-  return { r: Math.floor(index / gridSize), c: index % gridSize };
+  return { r: Math.floor(index / cols), c: index % cols };
 }
 
 function correctCellOf(tile) {
@@ -511,7 +561,7 @@ function correctCellOf(tile) {
 }
 
 function inBounds(r, c) {
-  return r >= 0 && r < gridSize && c >= 0 && c < gridSize;
+  return r >= 0 && r < rows && c >= 0 && c < cols;
 }
 
 // האם החלק במיקום index מחובר נכון לשכן שלו בכיוון (dr, dc)
@@ -520,7 +570,7 @@ function isJoined(index, dr, dc) {
   if (!inBounds(r + dr, c + dc)) return false;
 
   const a = correctCellOf(tiles[index]);
-  const b = correctCellOf(tiles[(r + dr) * gridSize + (c + dc)]);
+  const b = correctCellOf(tiles[(r + dr) * cols + (c + dc)]);
   return b.r === a.r + dr && b.c === a.c + dc;
 }
 
@@ -532,7 +582,7 @@ function getGroup(index) {
   for (let k = 0; k < group.length; k++) {
     const { r, c } = cellOf(group[k]);
     DIRS.forEach(([dr, dc]) => {
-      const next = (r + dr) * gridSize + (c + dc);
+      const next = (r + dr) * cols + (c + dc);
       if (!seen.has(next) && isJoined(group[k], dr, dc)) {
         seen.add(next);
         group.push(next);
@@ -707,7 +757,7 @@ function moveGroup(group, dr, dc) {
   const groupSet = new Set(group);
   const destOf = (index) => {
     const { r, c } = cellOf(index);
-    return inBounds(r + dr, c + dc) ? (r + dr) * gridSize + (c + dc) : -1;
+    return inBounds(r + dr, c + dc) ? (r + dr) * cols + (c + dc) : -1;
   };
 
   const dests = group.map(destOf);
@@ -723,7 +773,7 @@ function moveGroup(group, dr, dc) {
     let cell = dest;
     do {
       const { r, c } = cellOf(cell);
-      cell = (r - dr) * gridSize + (c - dc);
+      cell = (r - dr) * cols + (c - dc);
     } while (destSet.has(cell));
     next[cell] = tiles[dest];
   });
@@ -778,8 +828,7 @@ function checkWin() {
 
   gameOver = true;
 
-  const stars = starsForMoves(currentLevelIndex, moves);
-  const isNewBest = recordResult(currentLevelIndex, moves, stars);
+  recordResult(currentLevelIndex, currentDifficulty);
 
   tiles.forEach(tile => {
     tile.style.boxShadow = "none";
@@ -790,7 +839,7 @@ function checkWin() {
   vibrate([40, 60, 40, 60, 120]);
 
   clearTimeout(winTimer);
-  winTimer = setTimeout(() => openWinScreen(stars, isNewBest), WIN_SCREEN_DELAY);
+  winTimer = setTimeout(openWinScreen, WIN_SCREEN_DELAY);
 }
 
 // =====================
@@ -800,17 +849,25 @@ function isLastLevel() {
   return currentLevelIndex >= levels.length - 1;
 }
 
-function openWinScreen(stars, isNewBest) {
-  const best = getBest(currentLevelIndex);
+// הרמה הבאה באותו שלב (אם יש), אחרי שהנוכחית נפתרה
+function nextDifficulty() {
+  return currentDifficulty < DIFFICULTIES.length ? currentDifficulty + 1 : 0;
+}
+
+function openWinScreen() {
+  const stars = getStars(currentLevelIndex);
+  const harder = nextDifficulty();
 
   winTitle.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
   winStars.innerHTML = starsHtml(stars);
   winStats.innerHTML =
-    `<span>MOVES <b>${moves}</b></span>` +
-    (isNewBest
-      ? `<span class="new-best">NEW BEST!</span>`
-      : `<span>BEST <b>${best.moves}</b></span>`);
+    `<span>${DIFFICULTIES[currentDifficulty - 1].name.toUpperCase()}</span>` +
+    `<span>MOVES <b>${moves}</b></span>`;
   winNextBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+
+  // כפתור לרמה הקשה יותר (מופיע רק אם יש רמה הבאה)
+  winHarderBtn.classList.toggle("hidden", !harder);
+  if (harder) winHarderBtn.textContent = `▲ ${DIFFICULTIES[harder - 1].name}`;
 
   winModal.classList.remove("hidden");
 
@@ -836,12 +893,13 @@ function goNext() {
   if (isLastLevel()) {
     showLevels();
   } else {
-    loadLevel(currentLevelIndex + 1);
+    loadLevel(currentLevelIndex + 1, 1);
   }
 }
 
 winNextBtn?.addEventListener("click", goNext);
-winReplayBtn?.addEventListener("click", () => loadLevel(currentLevelIndex));
+winReplayBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, currentDifficulty));
+winHarderBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, nextDifficulty()));
 winLevelsBtn?.addEventListener("click", showLevels);
 
 // לחיצה על הרקע סוגרת את המסך כדי לראות את התמונה - נשאר כפתור להמשך מתחת ללוח
