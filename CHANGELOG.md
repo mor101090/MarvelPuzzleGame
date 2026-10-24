@@ -4,6 +4,10 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.5.1] (`156031a`) - Back button color
+### Changed
+- The Back button is now translucent red, matching the other red buttons.
+
 ## [0.5.0] (`f295bb4`) - Level select and progress
 ### Added
 - **Choose Level** screen with big level cards, in the style of the home screen.
