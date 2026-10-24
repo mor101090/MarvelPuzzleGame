@@ -228,9 +228,14 @@ levelsBackBtn?.addEventListener("click", showHome);
 // Level Select
 // =====================
 const LOCK_SVG = `
-  <svg class="level-lock" viewBox="0 0 24 24" aria-hidden="true">
+  <svg class="level-icon" viewBox="0 0 24 24" aria-hidden="true">
     <path fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"
       d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/>
+  </svg>`;
+
+const PLAY_SVG = `
+  <svg class="level-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round" d="M7 3.5v17l14-8.5z"/>
   </svg>`;
 
 function startLevel(index) {
@@ -267,15 +272,20 @@ function renderLevelSelect() {
         `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" + (getBest(index) ? `, ${getBest(index).stars} stars` : "") : ""));
 
       if (solved) {
-        // שלב שנפתר מציג את התמונה שלו (הגלריה) עם הכוכבים
+        // שלב שנפתר: התמונה עצמה, עם מספר השלב והכוכבים
         card.style.backgroundImage = `url('${level.image}')`;
         card.innerHTML =
           `<span class="level-tag">LEVEL ${index + 1}` +
           (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
           `</span>`;
+      } else if (locked) {
+        card.innerHTML = LOCK_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
       } else {
+        // שלב פתוח שעוד לא נפתר: התמונה מטושטשת וסימן play
         card.innerHTML =
-          `<span class="level-card-num">${index + 1}</span>` + (locked ? LOCK_SVG : "");
+          `<span class="level-teaser" style="background-image:url('${level.image}')"></span>` +
+          PLAY_SVG +
+          `<span class="level-tag">LEVEL ${index + 1}</span>`;
       }
 
       card.addEventListener("click", () => {

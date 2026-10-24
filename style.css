@@ -94,8 +94,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* טקסט לבן עם קו שחור - כמו הכפתורים במסך הבית */
 .level-label,
-.levels-title,
-.level-card-num{
+.levels-title{
   color: #fff;
   font-weight: 800;
   letter-spacing: 1px;
@@ -353,7 +352,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   padding: 0;
   border: 2px solid #000;
   border-radius: 26px;
-  background: #E23636;
+  overflow: hidden;
+  background: #3a3637;
   box-shadow: 0 10px 16px rgba(0,0,0,0.45);
   cursor: pointer;
   font: inherit;
@@ -368,44 +368,27 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   outline-offset: 3px;
 }
 
-.level-card-num{
-  font-size: 76px;
-  line-height: 1;
-}
-
 .level-card.is-locked{
   background: #5a5657;
   box-shadow: 0 6px 10px rgba(0,0,0,0.3);
   cursor: not-allowed;
 }
 
-.level-card.is-locked .level-card-num{
-  opacity: 0.35;
-}
-
-.level-lock{
+.level-icon{
   position: absolute;
+  top: 22%;
   width: 42%;
   height: auto;
   filter: drop-shadow(0 2px 0 #000);
 }
 
-.level-check{
+/* שלב פתוח שעוד לא נפתר - תמונה מטושטשת */
+.level-teaser{
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid #000;
-  background: #fff;
-  display: grid;
-  place-items: center;
-}
-
-.level-check svg{
-  width: 20px;
-  height: 20px;
+  inset: -12px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(9px) brightness(0.7);
 }
 
 .level-card.shake{
@@ -502,9 +485,6 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* ===== SOLVED LEVEL (תמונה) ===== */
 .level-card.has-picture{
-  overflow: hidden;
-  align-items: flex-end;
-  background-color: #E23636;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -525,6 +505,11 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 1px;
+}
+
+.level-card.is-locked .level-tag{
+  background: none;
+  opacity: 0.6;
 }
 
 .level-tag .star{

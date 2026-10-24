@@ -4,6 +4,16 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.12.0] (`@@0.12.0`) - Choose Level uses the gallery design
+### Changed
+- Choose Level no longer uses red number cards. Every level is now a picture card
+  in the gallery style, with the level name at the bottom:
+  - **Solved:** the picture, `LEVEL N` and the earned stars.
+  - **Open, not solved yet:** the picture blurred, with a play sign.
+  - **Locked:** grey with a padlock.
+### Removed
+- The red number cards and the check mark.
+
 ## [0.11.0] (`8038719`) - Gallery merged into Choose Level
 ### Changed
 - The gallery is now part of **Choose Level**. A solved level shows its picture
