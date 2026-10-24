@@ -131,7 +131,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 14px 12px 24px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
   gap: 12px;
 }
 
@@ -170,6 +170,16 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 .star.is-on{
   fill: #ffc933;
+}
+
+#boardViewport{
+  box-sizing: content-box;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: none;    /* אצבע אחת = גרירת חלק, שתיים = זום */
+  scrollbar-width: thin;
+  scrollbar-color: #ED1D24 transparent;
+  background: #141414;
 }
 
 #puzzle{
@@ -627,4 +637,127 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 .win-row .text-btn{
   min-width: 90px;
+}
+
+/* ===== ZOOM ===== */
+.zoom-ctrl{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom-btn{
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.zoom-btn:disabled{
+  opacity: 0.35;
+}
+
+.zoom-level{
+  min-width: 42px;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  cursor: pointer;
+}
+
+/* ===== LANDSCAPE (טלפון לרוחב) ===== */
+@media (orientation: landscape) and (max-height: 540px){
+  /* מסך בית: לוגו משמאל, כפתורים מימין */
+  .home-content{
+    display: grid;
+    grid-template-columns: auto auto;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    column-gap: 36px;
+    row-gap: 14px;
+    padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+  }
+  .home-logo{
+    grid-row: span 2;
+    width: min(34vw, 280px);
+    margin: 0;
+  }
+  .img-btn img{
+    width: min(44vw, 400px);
+  }
+
+  /* בחירת שלב: יותר כרטיסים בשורה */
+  .level-list{
+    width: min(100%, 860px);
+    padding-top: 12px;
+  }
+  .level-grid{
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* משחק: שורות עליונות צפופות יותר כדי להשאיר מקום ללוח */
+  .game-top{
+    padding-top: 6px;
+  }
+  .level-label{
+    font-size: 20px;
+  }
+  .icon-btn--small img{
+    width: 36px;
+  }
+  #puzzleWrap{
+    padding-top: 4px;
+    padding-bottom: 8px;
+    gap: 6px;
+  }
+  .hud-moves{
+    font-size: 16px;
+  }
+  .hud .star{
+    width: 22px;
+    height: 22px;
+  }
+  .zoom-btn{
+    width: 30px;
+    height: 30px;
+  }
+
+  /* תמונה בגדול: תמונה משמאל, פרטים ורמות מימין */
+  .viewer{
+    display: grid;
+    grid-template-columns: auto minmax(220px, 300px);
+    align-items: center;
+    column-gap: 20px;
+    row-gap: 10px;
+  }
+  .viewer img{
+    grid-row: 1 / span 3;
+    max-width: 55vw;
+    max-height: 82vh;
+  }
+  .diff-row{
+    width: 100%;
+  }
+
+  /* מסך ניצחון נמוך יותר */
+  .win-card{
+    gap: 8px;
+    padding: 14px 18px;
+  }
+  .win-stars .star{
+    width: 44px;
+    height: 44px;
+  }
+  .win-card .next{
+    padding: 10px 16px;
+  }
 }

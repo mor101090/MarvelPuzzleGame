@@ -2,6 +2,12 @@
 // DOM
 // =====================
 const puzzle = document.getElementById("puzzle");
+const boardViewport = document.getElementById("boardViewport");
+const puzzleWrap = document.getElementById("puzzleWrap");
+const hud = document.querySelector(".hud");
+const zoomInBtn = document.getElementById("zoomInBtn");
+const zoomOutBtn = document.getElementById("zoomOutBtn");
+const zoomResetBtn = document.getElementById("zoomResetBtn");
 const winMessage = document.getElementById("winMessage");
 const nextLevelBtn = document.getElementById("nextLevelBtn");
 
@@ -68,9 +74,14 @@ let rows = levels[0].grid;
 let imageAspect = 1;
 
 // Puzzle sizing
-const maxPuzzleSize = 360;
-const boardBorder = 3;   // גבול אדום סביב הלוח
-const sideGutter = 12;   // ריווח מהצדדים במסך צר
+// הלוח ממלא את המקום הפנוי במסך (גם לרוחב), עד הגבול הזה בצלע הארוכה
+const maxPuzzleSize = 900;
+const boardBorder = 3;    // גבול אדום סביב הלוח
+const boardBottomGap = 16;
+
+// Zoom
+const MAX_ZOOM = 3;
+let zoom = 1;
 
 // Tiles
 const tiles = [];
@@ -90,8 +101,10 @@ const EDGE_COLOR = "#ED1D24";
 const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 // Board size
-let puzzleWidth = 0;
+let puzzleWidth = 0;   // גודל הלוח בפועל (כולל זום)
 let puzzleHeight = 0;
+let baseWidth = 0;     // גודל הלוח בלי זום (מה שנכנס במסך)
+let baseHeight = 0;
 
 // Navigation
 let started = false;
@@ -416,6 +429,7 @@ function loadLevel(index, difficulty = 1) {
   currentImageSrc = levels[index].image;
 
   gameOver = false;
+  zoom = 1;
   moves = 0;
   updateHud();
   closeWinScreen();
@@ -455,32 +469,47 @@ function loadLevel(index, difficulty = 1) {
 // Layout (responsive)
 // =====================
 function layoutPuzzle() {
-  if (!tiles.length) return;
+  if (!tiles.length || gameScreen.classList.contains("hidden")) return;
 
-  // הלוח לא יחרוג מרוחב המסך בטלפונים צרים
-  const available = Math.max(120, window.innerWidth - 2 * sideGutter - 2 * boardBorder);
-  const size = Math.min(maxPuzzleSize, available);
+  // המקום הפנוי: רוחב האזור ועד תחתית המסך (עובד גם כשהטלפון לרוחב)
+  const wrapStyle = getComputedStyle(puzzleWrap);
+  const availW = puzzleWrap.clientWidth
+    - parseFloat(wrapStyle.paddingLeft) - parseFloat(wrapStyle.paddingRight) - 2 * boardBorder;
+  const top = boardViewport.getBoundingClientRect().top + window.scrollY;
+  const availH = window.innerHeight - top - boardBottomGap - 2 * boardBorder;
 
-  if (imageAspect >= 1) {
-    puzzleWidth = size;
-    puzzleHeight = size / imageAspect;
+  const maxW = Math.max(120, Math.min(availW, maxPuzzleSize));
+  const maxH = Math.max(160, Math.min(availH, maxPuzzleSize));
+
+  if (maxW / maxH > imageAspect) {
+    baseHeight = maxH;
+    baseWidth = maxH * imageAspect;
   } else {
-    puzzleHeight = size;
-    puzzleWidth = size * imageAspect;
+    baseWidth = maxW;
+    baseHeight = maxW / imageAspect;
   }
+
+  boardViewport.style.width = baseWidth + "px";
+  boardViewport.style.height = baseHeight + "px";
+  boardViewport.style.border = `${boardBorder}px solid #ED1D24`;
+  if (hud) hud.style.width = Math.max(baseWidth + 2 * boardBorder, 280) + "px";
+
+  sizeBoard();
+}
+
+// מגדיר את גודל הלוח והחלקים לפי הזום הנוכחי
+function sizeBoard() {
+  puzzleWidth = baseWidth * zoom;
+  puzzleHeight = baseHeight * zoom;
 
   const tileWidth = puzzleWidth / cols;
   const tileHeight = puzzleHeight / rows;
 
-  // content-box: הגבול נוסף מסביב ולא "אוכל" מהאריחים
-  puzzle.style.boxSizing = "content-box";
   puzzle.style.width = puzzleWidth + "px";
   puzzle.style.height = puzzleHeight + "px";
-  puzzle.style.margin = "12px auto";
   puzzle.style.display = "grid";
   puzzle.style.gridTemplateColumns = `repeat(${cols}, ${tileWidth}px)`;
   puzzle.style.gridAutoRows = `${tileHeight}px`;
-  puzzle.style.border = `${boardBorder}px solid #ED1D24`;
 
   tiles.forEach(tile => {
     const i = parseInt(tile.dataset.correctIndex, 10);
@@ -491,9 +520,104 @@ function layoutPuzzle() {
     tile.style.backgroundSize = `${puzzleWidth}px ${puzzleHeight}px`;
     tile.style.backgroundPosition = `-${x * tileWidth}px -${y * tileHeight}px`;
   });
+
+  if (zoomResetBtn) zoomResetBtn.textContent = `${Math.round(zoom * 10) / 10}×`;
+  if (zoomOutBtn) zoomOutBtn.disabled = zoom <= 1;
+  if (zoomInBtn) zoomInBtn.disabled = zoom >= MAX_ZOOM;
 }
 
-window.addEventListener("resize", layoutPuzzle);
+// =====================
+// Zoom (צביטה בשתי אצבעות, כפתורים, או Ctrl+גלגלת)
+// =====================
+// מחשב נקודה במסך לקואורדינטות בתוך הלוח (בלי זום)
+function boardPointAt(clientX, clientY) {
+  const rect = boardViewport.getBoundingClientRect();
+  const x = clientX - rect.left - boardViewport.clientLeft;
+  const y = clientY - rect.top - boardViewport.clientTop;
+  return {
+    x, y,
+    contentX: (boardViewport.scrollLeft + x) / zoom,
+    contentY: (boardViewport.scrollTop + y) / zoom
+  };
+}
+
+// משנה זום כך שהנקודה contentX/Y תישאר מתחת ל-screenX/Y (קואורדינטות בתוך החלון)
+function setZoom(newZoom, contentX, contentY, screenX, screenY) {
+  newZoom = Math.min(MAX_ZOOM, Math.max(1, newZoom));
+  if (!tiles.length) { zoom = newZoom; return; }
+
+  zoom = newZoom;
+  sizeBoard();
+  boardViewport.scrollLeft = contentX * zoom - screenX;
+  boardViewport.scrollTop = contentY * zoom - screenY;
+}
+
+function zoomAroundCenter(factor) {
+  const rect = boardViewport.getBoundingClientRect();
+  const p = boardPointAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  setZoom(zoom * factor, p.contentX, p.contentY, p.x, p.y);
+}
+
+zoomInBtn?.addEventListener("click", () => zoomAroundCenter(1.5));
+zoomOutBtn?.addEventListener("click", () => zoomAroundCenter(1 / 1.5));
+zoomResetBtn?.addEventListener("click", () => setZoom(1, 0, 0, 0, 0));
+
+// Ctrl + גלגלת (וצביטה במשטח מגע של מחשב נייד)
+boardViewport?.addEventListener("wheel", (e) => {
+  if (!e.ctrlKey) return;
+  e.preventDefault();
+  const p = boardPointAt(e.clientX, e.clientY);
+  setZoom(zoom * Math.exp(-e.deltaY * 0.005), p.contentX, p.contentY, p.x, p.y);
+}, { passive: false });
+
+// צביטה: שתי אצבעות על הלוח מגדילות/מקטינות ומזיזות, אצבע אחת גוררת חלק
+const activeTouches = new Map();
+let pinch = null;
+
+function touchPair() {
+  const [a, b] = [...activeTouches.values()];
+  return {
+    dist: Math.hypot(a.x - b.x, a.y - b.y),
+    midX: (a.x + b.x) / 2,
+    midY: (a.y + b.y) / 2
+  };
+}
+
+boardViewport?.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "touch") return;
+  activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activeTouches.size === 2) {
+    cancelDrag(); // האצבע הראשונה התחילה לגרור - מבטלים, זו צביטה
+    const t = touchPair();
+    const p = boardPointAt(t.midX, t.midY);
+    pinch = { dist: t.dist || 1, zoom, contentX: p.contentX, contentY: p.contentY };
+  }
+}, { capture: true });
+
+document.addEventListener("pointermove", (e) => {
+  if (!activeTouches.has(e.pointerId)) return;
+  activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (!pinch || activeTouches.size < 2) return;
+
+  const t = touchPair();
+  const p = boardPointAt(t.midX, t.midY);
+  setZoom(pinch.zoom * (t.dist / pinch.dist), pinch.contentX, pinch.contentY, p.x, p.y);
+});
+
+function endTouch(e) {
+  activeTouches.delete(e.pointerId);
+  if (activeTouches.size < 2) pinch = null;
+}
+document.addEventListener("pointerup", endTouch);
+document.addEventListener("pointercancel", endTouch);
+
+// סיבוב הטלפון: מסדרים מיד ושוב רגע אחרי (בחלק מהטלפונים הגודל מתעדכן באיחור)
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  layoutPuzzle();
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(layoutPuzzle, 250);
+});
 
 // =====================
 // Create Tiles
@@ -618,7 +742,7 @@ function updateTileEdges() {
 // =====================
 function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
-  if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
+  if (dragGhost || pinch) return; // כבר גוררים או צובטים (אצבע שנייה)
 
   const sourceIndex = tiles.indexOf(tile);
   if (sourceIndex === -1) return;
@@ -685,6 +809,7 @@ function onPointerMove(e) {
   lastClientX = e.clientX;
   lastClientY = e.clientY;
   moveGhost(lastClientX, lastClientY);
+  updateAutoScroll();
 
   // טיק קצר בכל מעבר לתא חדש
   const cell = cellUnderGrabbedTile();
@@ -741,8 +866,8 @@ function onPointerUp(e) {
 // התא בלוח שמתחת למרכז החלק שתפסנו (לא מתחת לאצבע - כך זה מרגיש טבעי יותר)
 function cellUnderGrabbedTile() {
   const rect = puzzle.getBoundingClientRect();
-  const left = rect.left + puzzle.clientLeft;
-  const top = rect.top + puzzle.clientTop;
+  const left = rect.left;
+  const top = rect.top;
 
   const centerX = lastClientX - dragGrab.x + dragGrab.tileW / 2;
   const centerY = lastClientY - dragGrab.y + dragGrab.tileH / 2;
@@ -782,6 +907,35 @@ function moveGroup(group, dr, dc) {
   return true;
 }
 
+// כשיש זום וגוררים חלק לקצה החלון - הלוח גולל לבד לכיוון הזה
+const AUTO_SCROLL_EDGE = 40;
+const AUTO_SCROLL_SPEED = 10;
+let autoScrollFrame = null;
+let autoScrollX = 0;
+let autoScrollY = 0;
+
+function updateAutoScroll() {
+  autoScrollX = autoScrollY = 0;
+  if (zoom > 1 && dragGhost) {
+    const r = boardViewport.getBoundingClientRect();
+    if (lastClientX < r.left + AUTO_SCROLL_EDGE) autoScrollX = -AUTO_SCROLL_SPEED;
+    else if (lastClientX > r.right - AUTO_SCROLL_EDGE) autoScrollX = AUTO_SCROLL_SPEED;
+    if (lastClientY < r.top + AUTO_SCROLL_EDGE) autoScrollY = -AUTO_SCROLL_SPEED;
+    else if (lastClientY > r.bottom - AUTO_SCROLL_EDGE) autoScrollY = AUTO_SCROLL_SPEED;
+  }
+  if ((autoScrollX || autoScrollY) && !autoScrollFrame) {
+    autoScrollFrame = requestAnimationFrame(autoScrollStep);
+  }
+}
+
+function autoScrollStep() {
+  autoScrollFrame = null;
+  if (!dragGhost || (!autoScrollX && !autoScrollY)) return;
+  boardViewport.scrollLeft += autoScrollX;
+  boardViewport.scrollTop += autoScrollY;
+  autoScrollFrame = requestAnimationFrame(autoScrollStep);
+}
+
 function moveGhost(x, y) {
   if (!dragGhost) return;
   dragGhost.style.left = (x - dragGrab.ghostX) + "px";
@@ -797,6 +951,7 @@ function removeGhost() {
 
 // מבטל גרירה פעילה בלי להחליף אריחים
 function cancelDrag() {
+  autoScrollX = autoScrollY = 0;
   tiles.forEach(tile => { tile.style.opacity = ""; });
   removeGhost();
   dragSourceTile = null;
@@ -829,6 +984,7 @@ function checkWin() {
   gameOver = true;
 
   recordResult(currentLevelIndex, currentDifficulty);
+  setZoom(1, 0, 0, 0, 0); // מראים את כל התמונה המושלמת
 
   tiles.forEach(tile => {
     tile.style.boxShadow = "none";
