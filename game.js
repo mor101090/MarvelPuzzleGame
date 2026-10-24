@@ -20,6 +20,7 @@ const galleryScreen = document.getElementById("galleryScreen");
 const galleryList = document.getElementById("galleryList");
 const galleryCount = document.getElementById("galleryCount");
 const galleryBtn = document.getElementById("galleryBtn");
+const homeGalleryBtn = document.getElementById("homeGalleryBtn");
 const galleryBackBtn = document.getElementById("galleryBackBtn");
 const viewerModal = document.getElementById("viewerModal");
 const viewerImg = document.getElementById("viewerImg");
@@ -207,7 +208,11 @@ function showLevels() {
   showScreen(levelScreen);
 }
 
-function showGallery() {
+// מאיפה הגענו לגלריה (מסך הבית או בחירת שלב) - לשם Back חוזר
+let galleryFrom = "levels";
+
+function showGallery(from = "levels") {
+  galleryFrom = from;
   renderGallery();
   showScreen(galleryScreen);
 }
@@ -232,8 +237,9 @@ backBtn?.addEventListener("click", () => {
 
 chooseLevelBtn?.addEventListener("click", showLevels);
 levelsBackBtn?.addEventListener("click", showHome);
-galleryBtn?.addEventListener("click", showGallery);
-galleryBackBtn?.addEventListener("click", showLevels);
+galleryBtn?.addEventListener("click", () => showGallery("levels"));
+homeGalleryBtn?.addEventListener("click", () => showGallery("home"));
+galleryBackBtn?.addEventListener("click", () => (galleryFrom === "home" ? showHome() : showLevels()));
 
 // =====================
 // Level Select
