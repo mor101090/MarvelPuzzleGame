@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.16.0] (`@@0.16.0`) - Landscape and zoom
+## [0.16.0] (`9cd3fc9`) - Landscape and zoom
 ### Added
 - **Landscape:** the game adapts when the phone is turned sideways. The board
   now fills the free space on the screen in both directions, so wide pictures
