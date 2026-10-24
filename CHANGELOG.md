@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.14.0] (`@@0.14.0`) - No spoilers
+## [0.14.0] (`c88b08e`) - No spoilers
 ### Removed
 - **Preview** button. The player now has to work out the picture.
 - The blurred picture on the next level in Choose Level.
