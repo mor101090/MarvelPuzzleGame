@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.15.1] (`@@0.15.1`) - Rollback tool
+## [0.15.1] (`62db700`) - Rollback tool
 ### Added
 - `tools/rollback.py`: restores the game to any earlier version in one new commit,
   without rewriting history. It can also roll forward again.
