@@ -36,10 +36,15 @@ let gameOver = false;
 
 // Drag
 let dragSourceTile = null;
+let dragGroup = [];        // מיקומים (אינדקסים) של כל החלקים שנגררים ביחד
 let dragGhost = null;
 let dragPointerId = null;
+let dragGrab = null;       // איפה בתוך החלק תפסנו + גודל חלק
 let lastClientX = 0;
 let lastClientY = 0;
+
+const EDGE_COLOR = "#ED1D24";
+const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 // Board size
 let puzzleWidth = 0;
@@ -179,8 +184,6 @@ function createTiles() {
     const tile = document.createElement("div");
     tile.className = "tile";
 
-    // קו פנימי במקום border - כדי שהתמונה לא תזוז פיקסל בכל אריח
-    tile.style.boxShadow = "inset 0 0 0 1px #ED1D24";
     tile.style.backgroundImage = `url('${currentImageSrc}')`;
     tile.style.backgroundRepeat = "no-repeat";
     tile.style.cursor = "grab";
@@ -219,6 +222,71 @@ function shuffleTiles() {
 function renderTiles() {
   puzzle.innerHTML = "";
   tiles.forEach(tile => puzzle.appendChild(tile));
+  updateTileEdges();
+}
+
+// =====================
+// Connected pieces
+// =====================
+function cellOf(index) {
+  return { r: Math.floor(index / gridSize), c: index % gridSize };
+}
+
+function correctCellOf(tile) {
+  return cellOf(parseInt(tile.dataset.correctIndex, 10));
+}
+
+function inBounds(r, c) {
+  return r >= 0 && r < gridSize && c >= 0 && c < gridSize;
+}
+
+// האם החלק במיקום index מחובר נכון לשכן שלו בכיוון (dr, dc)
+function isJoined(index, dr, dc) {
+  const { r, c } = cellOf(index);
+  if (!inBounds(r + dr, c + dc)) return false;
+
+  const a = correctCellOf(tiles[index]);
+  const b = correctCellOf(tiles[(r + dr) * gridSize + (c + dc)]);
+  return b.r === a.r + dr && b.c === a.c + dc;
+}
+
+// כל החלקים שמחוברים (ישירות או דרך שכנים) לחלק במיקום index
+function getGroup(index) {
+  const group = [index];
+  const seen = new Set(group);
+
+  for (let k = 0; k < group.length; k++) {
+    const { r, c } = cellOf(group[k]);
+    DIRS.forEach(([dr, dc]) => {
+      const next = (r + dr) * gridSize + (c + dc);
+      if (!seen.has(next) && isJoined(group[k], dr, dc)) {
+        seen.add(next);
+        group.push(next);
+      }
+    });
+  }
+  return group;
+}
+
+function countJoins() {
+  let joins = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    if (isJoined(i, 0, 1)) joins++;
+    if (isJoined(i, 1, 0)) joins++;
+  }
+  return joins;
+}
+
+// קו אדום רק בצדדים שלא מחוברים - ככה רואים אילו חלקים "נדבקו"
+function updateTileEdges() {
+  tiles.forEach((tile, i) => {
+    const lines = [];
+    if (!isJoined(i, -1, 0)) lines.push(`inset 0 1px 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 1, 0))  lines.push(`inset 0 -1px 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 0, -1)) lines.push(`inset 1px 0 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 0, 1))  lines.push(`inset -1px 0 0 0 ${EDGE_COLOR}`);
+    tile.style.boxShadow = lines.join(", ") || "none";
+  });
 }
 
 // =====================
@@ -228,29 +296,63 @@ function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
   if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
 
+  const sourceIndex = tiles.indexOf(tile);
+  if (sourceIndex === -1) return;
+
   dragSourceTile = tile;
+  dragGroup = getGroup(sourceIndex);
   dragPointerId = pointerId;
   lastClientX = clientX;
   lastClientY = clientY;
 
   const rect = tile.getBoundingClientRect();
-  dragGhost = tile.cloneNode(true);
+  const tileW = rect.width;
+  const tileH = rect.height;
+
+  // גבולות הקבוצה ברשת
+  const cells = dragGroup.map(cellOf);
+  const minR = Math.min(...cells.map(p => p.r));
+  const maxR = Math.max(...cells.map(p => p.r));
+  const minC = Math.min(...cells.map(p => p.c));
+  const maxC = Math.max(...cells.map(p => p.c));
+  const src = cellOf(sourceIndex);
+
+  dragGrab = {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+    tileW,
+    tileH,
+    // המרחק מפינת ה"רוח" לנקודה שתפסנו
+    ghostX: (src.c - minC) * tileW + (clientX - rect.left),
+    ghostY: (src.r - minR) * tileH + (clientY - rect.top)
+  };
+
+  dragGhost = document.createElement("div");
   dragGhost.style.position = "fixed";
   dragGhost.style.left = "0px";
   dragGhost.style.top = "0px";
-  dragGhost.style.width = rect.width + "px";
-  dragGhost.style.height = rect.height + "px";
+  dragGhost.style.width = (maxC - minC + 1) * tileW + "px";
+  dragGhost.style.height = (maxR - minR + 1) * tileH + "px";
   dragGhost.style.pointerEvents = "none";
   dragGhost.style.zIndex = 9999;
   dragGhost.style.opacity = "0.92";
-  dragGhost.style.transform = "scale(1.05)";
-  dragGhost.style.boxShadow = "0 0 12px rgba(255,255,255,0.9)";
-  dragGhost.dataset.halfW = rect.width / 2;
-  dragGhost.dataset.halfH = rect.height / 2;
-  document.body.appendChild(dragGhost);
+  dragGhost.style.filter = "drop-shadow(0 0 8px rgba(255,255,255,0.85))";
 
-  tile.style.opacity = "0.35";
+  dragGroup.forEach(index => {
+    const { r, c } = cellOf(index);
+    const clone = tiles[index].cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.left = (c - minC) * tileW + "px";
+    clone.style.top = (r - minR) * tileH + "px";
+    dragGhost.appendChild(clone);
+    tiles[index].style.opacity = "0.35";
+  });
+
+  document.body.appendChild(dragGhost);
   moveGhost(clientX, clientY);
+
+  playSound("pick");
+  vibrate(10);
 }
 
 function onPointerMove(e) {
@@ -266,23 +368,89 @@ function onPointerUp(e) {
   lastClientX = e.clientX;
   lastClientY = e.clientY;
 
-  const elem = document.elementFromPoint(lastClientX, lastClientY);
-  const targetTile = elem && elem.closest("#puzzle .tile");
-  const sourceTile = dragSourceTile;
+  const group = dragGroup;
+  const sourceIndex = tiles.indexOf(dragSourceTile);
+  const target = cellUnderGrabbedTile();
 
   cancelDrag();
 
-  if (targetTile && sourceTile && targetTile !== sourceTile) {
-    swapTiles(sourceTile, targetTile);
-    renderTiles();
-    checkWin();
+  // שוחרר מחוץ ללוח או באותו מקום
+  if (!target || sourceIndex === -1) return;
+  const src = cellOf(sourceIndex);
+  const dr = target.r - src.r;
+  const dc = target.c - src.c;
+  if (dr === 0 && dc === 0) return;
+
+  const joinsBefore = countJoins();
+
+  if (!moveGroup(group, dr, dc)) {
+    // הקבוצה לא נכנסת שם (יוצאת מהלוח)
+    playSound("invalid");
+    vibrate([15, 40, 15]);
+    return;
   }
+
+  renderTiles();
+
+  if (countJoins() > joinsBefore) {
+    playSound("snap");
+    vibrate(30);
+  } else {
+    playSound("drop");
+    vibrate(8);
+  }
+
+  checkWin();
+}
+
+// התא בלוח שמתחת למרכז החלק שתפסנו (לא מתחת לאצבע - כך זה מרגיש טבעי יותר)
+function cellUnderGrabbedTile() {
+  const rect = puzzle.getBoundingClientRect();
+  const left = rect.left + puzzle.clientLeft;
+  const top = rect.top + puzzle.clientTop;
+
+  const centerX = lastClientX - dragGrab.x + dragGrab.tileW / 2;
+  const centerY = lastClientY - dragGrab.y + dragGrab.tileH / 2;
+
+  const c = Math.floor((centerX - left) / dragGrab.tileW);
+  const r = Math.floor((centerY - top) / dragGrab.tileH);
+  return inBounds(r, c) ? { r, c } : null;
+}
+
+// מזיז קבוצה ב-(dr, dc). החלקים שהיו ביעד עוברים למקומות שהקבוצה פינתה.
+function moveGroup(group, dr, dc) {
+  const groupSet = new Set(group);
+  const destOf = (index) => {
+    const { r, c } = cellOf(index);
+    return inBounds(r + dr, c + dc) ? (r + dr) * gridSize + (c + dc) : -1;
+  };
+
+  const dests = group.map(destOf);
+  if (dests.includes(-1)) return false;
+  const destSet = new Set(dests);
+
+  const next = tiles.slice();
+  group.forEach((index, k) => { next[dests[k]] = tiles[index]; });
+
+  // חלק שהיה ביעד "נדחף" אחורה עד שהוא מגיע לתא שהתפנה
+  destSet.forEach(dest => {
+    if (groupSet.has(dest)) return;
+    let cell = dest;
+    do {
+      const { r, c } = cellOf(cell);
+      cell = (r - dr) * gridSize + (c - dc);
+    } while (destSet.has(cell));
+    next[cell] = tiles[dest];
+  });
+
+  tiles.splice(0, tiles.length, ...next);
+  return true;
 }
 
 function moveGhost(x, y) {
   if (!dragGhost) return;
-  dragGhost.style.left = (x - parseFloat(dragGhost.dataset.halfW)) + "px";
-  dragGhost.style.top = (y - parseFloat(dragGhost.dataset.halfH)) + "px";
+  dragGhost.style.left = (x - dragGrab.ghostX) + "px";
+  dragGhost.style.top = (y - dragGrab.ghostY) + "px";
 }
 
 function removeGhost() {
@@ -294,9 +462,11 @@ function removeGhost() {
 
 // מבטל גרירה פעילה בלי להחליף אריחים
 function cancelDrag() {
-  if (dragSourceTile) dragSourceTile.style.opacity = "";
+  tiles.forEach(tile => { tile.style.opacity = ""; });
   removeGhost();
   dragSourceTile = null;
+  dragGroup = [];
+  dragGrab = null;
   dragPointerId = null;
 }
 
@@ -328,6 +498,9 @@ function checkWin() {
   });
 
   if (winMessage) winMessage.style.display = "block";
+
+  playSound("win");
+  vibrate([40, 60, 40, 60, 120]);
 
   if (nextLevelBtn) {
     const isLastLevel = currentLevelIndex >= levels.length - 1;

@@ -10,7 +10,7 @@
 <body>
   <!-- HOME SCREEN -->
   <main id="homeScreen" class="screen home">
-    <button id="settingsBtn" class="icon-btn" aria-label="Settings" type="button">
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings" type="button" data-open-settings>
       <img src="assets/ui/Preference.png" alt="" />
     </button>
 
@@ -31,6 +31,9 @@
   <main id="gameScreen" class="screen game hidden">
     <div class="game-top">
       <button id="backBtn" class="text-btn" type="button">← Back</button>
+      <button class="icon-btn icon-btn--small" aria-label="Settings" type="button" data-open-settings>
+        <img src="assets/ui/Preference.png" alt="" />
+      </button>
     </div>
 
     <div id="puzzleWrap">
@@ -41,6 +44,32 @@
     </div>
   </main>
 
+  <!-- SETTINGS -->
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card">
+      <h2 id="settingsTitle">Settings</h2>
+
+      <label class="toggle-row" for="soundToggle">
+        <span>Sound effects</span>
+        <input id="soundToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <label class="toggle-row" for="musicToggle">
+        <span>Music <small>coming soon</small></span>
+        <input id="musicToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <label class="toggle-row" for="vibrationToggle">
+        <span>Vibration</span>
+        <input id="vibrationToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <button id="closeSettingsBtn" class="next" type="button">DONE</button>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+  <script src="sound.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

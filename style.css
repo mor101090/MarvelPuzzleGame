@@ -86,6 +86,18 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 .game-top{
   padding: 14px 14px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* בתוך שורת המשחק הכפתור לא ממוקם אבסולוטית */
+.game-top .icon-btn{
+  position: static;
+}
+
+.icon-btn--small img{
+  width: 44px;
 }
 
 .text-btn{
@@ -124,4 +136,97 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   color: #fff;
   font-weight: 700;
   letter-spacing: 0.5px;
+}
+
+/* ===== SETTINGS ===== */
+.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0,0,0,0.65);
+}
+
+.modal-card{
+  width: min(100%, 340px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 20px 20px;
+  border: 3px solid #ED1D24;
+  border-radius: 16px;
+  background: #141414;
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+}
+
+.modal-card h2{
+  margin: 0 0 8px;
+  font-size: 24px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.modal-card .next{
+  margin-top: 14px;
+  align-self: center;
+}
+
+.toggle-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.toggle-row small{
+  margin-left: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* מתג עגול במקום checkbox */
+.toggle{
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 50px;
+  height: 28px;
+  margin: 0;
+  border-radius: 999px;
+  background: #3a3a3a;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.toggle::after{
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.toggle:checked{
+  background: #ED1D24;
+}
+
+.toggle:checked::after{
+  transform: translateX(22px);
+}
+
+.toggle:focus-visible{
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
