@@ -23,9 +23,12 @@ const levels = [
 let currentLevelIndex = 0;
 let currentImageSrc = levels[0].image;
 let gridSize = levels[0].grid;
+let imageAspect = 1;
 
 // Puzzle sizing
 const maxPuzzleSize = 360;
+const boardBorder = 3;   // גבול אדום סביב הלוח
+const sideGutter = 12;   // ריווח מהצדדים במסך צר
 
 // Tiles
 const tiles = [];
@@ -34,6 +37,7 @@ let gameOver = false;
 // Drag
 let dragSourceTile = null;
 let dragGhost = null;
+let dragPointerId = null;
 let lastClientX = 0;
 let lastClientY = 0;
 
@@ -44,10 +48,14 @@ let puzzleHeight = 0;
 // Navigation
 let started = false;
 
+// מונע מטעינת תמונה ישנה לדרוס שלב חדש (למשל לחיצה מהירה על NEXT LEVEL)
+let loadToken = 0;
+
 // =====================
 // Screen Navigation
 // =====================
 function showHome() {
+  cancelDrag();
   homeScreen?.classList.remove("hidden");
   gameScreen?.classList.add("hidden");
 }
@@ -62,6 +70,8 @@ playBtn?.addEventListener("click", () => {
   if (!started) {
     started = true;
     loadLevel(0);
+  } else {
+    layoutPuzzle();
   }
 });
 
@@ -82,88 +92,108 @@ function loadLevel(index) {
   gridSize = levels[index].grid;
 
   gameOver = false;
-  dragSourceTile = null;
-  removeGhost();
+  cancelDrag();
   tiles.length = 0;
+  puzzle.innerHTML = "";
 
   if (winMessage) winMessage.style.display = "none";
   if (nextLevelBtn) nextLevelBtn.style.display = "none";
 
+  const token = ++loadToken;
   const img = new Image();
-  img.src = currentImageSrc;
 
   img.onload = () => {
-    const aspect = img.naturalWidth / img.naturalHeight;
+    if (token !== loadToken) return;
 
-    if (aspect >= 1) {
-      puzzleWidth = maxPuzzleSize;
-      puzzleHeight = maxPuzzleSize / aspect;
-    } else {
-      puzzleHeight = maxPuzzleSize;
-      puzzleWidth = maxPuzzleSize * aspect;
-    }
+    imageAspect = img.naturalWidth / img.naturalHeight;
 
-    // Board styles
-    puzzle.style.width = puzzleWidth + "px";
-    puzzle.style.height = puzzleHeight + "px";
-    puzzle.style.margin = "12px auto";
-    puzzle.style.display = "grid";
-    puzzle.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-    puzzle.style.border = "3px solid #ED1D24";
-
-    createTiles(puzzleWidth, puzzleHeight);
+    createTiles();
     shuffleTiles();
     renderTiles();
+    layoutPuzzle();
   };
 
   img.onerror = () => {
+    if (token !== loadToken) return;
     console.error("Image not found:", currentImageSrc);
     alert(`Image not found: ${currentImageSrc}\nCheck filename (case-sensitive on GitHub Pages).`);
   };
+
+  img.src = currentImageSrc;
 }
+
+// =====================
+// Layout (responsive)
+// =====================
+function layoutPuzzle() {
+  if (!tiles.length) return;
+
+  // הלוח לא יחרוג מרוחב המסך בטלפונים צרים
+  const available = Math.max(120, window.innerWidth - 2 * sideGutter - 2 * boardBorder);
+  const size = Math.min(maxPuzzleSize, available);
+
+  if (imageAspect >= 1) {
+    puzzleWidth = size;
+    puzzleHeight = size / imageAspect;
+  } else {
+    puzzleHeight = size;
+    puzzleWidth = size * imageAspect;
+  }
+
+  const tileWidth = puzzleWidth / gridSize;
+  const tileHeight = puzzleHeight / gridSize;
+
+  // content-box: הגבול נוסף מסביב ולא "אוכל" מהאריחים
+  puzzle.style.boxSizing = "content-box";
+  puzzle.style.width = puzzleWidth + "px";
+  puzzle.style.height = puzzleHeight + "px";
+  puzzle.style.margin = "12px auto";
+  puzzle.style.display = "grid";
+  puzzle.style.gridTemplateColumns = `repeat(${gridSize}, ${tileWidth}px)`;
+  puzzle.style.gridAutoRows = `${tileHeight}px`;
+  puzzle.style.border = `${boardBorder}px solid #ED1D24`;
+
+  tiles.forEach(tile => {
+    const i = parseInt(tile.dataset.correctIndex, 10);
+    const x = i % gridSize;
+    const y = Math.floor(i / gridSize);
+    tile.style.width = tileWidth + "px";
+    tile.style.height = tileHeight + "px";
+    tile.style.backgroundSize = `${puzzleWidth}px ${puzzleHeight}px`;
+    tile.style.backgroundPosition = `-${x * tileWidth}px -${y * tileHeight}px`;
+  });
+}
+
+window.addEventListener("resize", layoutPuzzle);
 
 // =====================
 // Create Tiles
 // =====================
-function createTiles(pWidth, pHeight) {
+function createTiles() {
   puzzle.innerHTML = "";
   tiles.length = 0;
-  dragSourceTile = null;
-  removeGhost();
+  cancelDrag();
   gameOver = false;
-
-  const tileWidth = pWidth / gridSize;
-  const tileHeight = pHeight / gridSize;
 
   for (let i = 0; i < gridSize * gridSize; i++) {
     const tile = document.createElement("div");
     tile.className = "tile";
 
-    tile.style.border = "1px solid #ED1D24";
-    tile.style.boxSizing = "border-box";
-    tile.style.height = tileHeight + "px";
+    // קו פנימי במקום border - כדי שהתמונה לא תזוז פיקסל בכל אריח
+    tile.style.boxShadow = "inset 0 0 0 1px #ED1D24";
     tile.style.backgroundImage = `url('${currentImageSrc}')`;
-    tile.style.backgroundSize = `${pWidth}px ${pHeight}px`;
+    tile.style.backgroundRepeat = "no-repeat";
     tile.style.cursor = "grab";
-
-    const x = i % gridSize;
-    const y = Math.floor(i / gridSize);
-    tile.style.backgroundPosition = `-${x * tileWidth}px -${y * tileHeight}px`;
+    tile.style.userSelect = "none";
 
     tile.dataset.correctIndex = i;
 
-    // Mouse drag
-    tile.addEventListener("mousedown", (e) => {
+    // Pointer Events: עכבר + מגע + עט במקום אחד
+    tile.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
-      startDrag(tile, e.clientX, e.clientY);
+      startDrag(tile, e.pointerId, e.clientX, e.clientY);
     });
-
-    // Touch drag (ignore multi-touch)
-    tile.addEventListener("touchstart", (e) => {
-      if (e.touches.length > 1) return;
-      const touch = e.touches[0];
-      startDrag(tile, touch.clientX, touch.clientY);
-    }, { passive: true });
 
     tiles.push(tile);
   }
@@ -172,11 +202,18 @@ function createTiles(pWidth, pHeight) {
 // =====================
 // Shuffle / Render
 // =====================
+function isSolved() {
+  return tiles.every((tile, i) => parseInt(tile.dataset.correctIndex, 10) === i);
+}
+
 function shuffleTiles() {
-  for (let i = tiles.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-  }
+  // ערבוב חוזר עד שהלוח לא פתור כבר מההתחלה
+  do {
+    for (let i = tiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+  } while (tiles.length > 1 && isSolved());
 }
 
 function renderTiles() {
@@ -187,19 +224,20 @@ function renderTiles() {
 // =====================
 // Drag Logic
 // =====================
-function startDrag(tile, clientX, clientY) {
+function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
-  if (dragGhost) return;
+  if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
 
   dragSourceTile = tile;
+  dragPointerId = pointerId;
   lastClientX = clientX;
   lastClientY = clientY;
 
   const rect = tile.getBoundingClientRect();
   dragGhost = tile.cloneNode(true);
   dragGhost.style.position = "fixed";
-  dragGhost.style.left = rect.left + "px";
-  dragGhost.style.top = rect.top + "px";
+  dragGhost.style.left = "0px";
+  dragGhost.style.top = "0px";
   dragGhost.style.width = rect.width + "px";
   dragGhost.style.height = rect.height + "px";
   dragGhost.style.pointerEvents = "none";
@@ -207,55 +245,44 @@ function startDrag(tile, clientX, clientY) {
   dragGhost.style.opacity = "0.92";
   dragGhost.style.transform = "scale(1.05)";
   dragGhost.style.boxShadow = "0 0 12px rgba(255,255,255,0.9)";
+  dragGhost.dataset.halfW = rect.width / 2;
+  dragGhost.dataset.halfH = rect.height / 2;
   document.body.appendChild(dragGhost);
+
+  tile.style.opacity = "0.35";
+  moveGhost(clientX, clientY);
 }
 
 function onPointerMove(e) {
-  if (!dragGhost) return;
+  if (!dragGhost || e.pointerId !== dragPointerId) return;
   lastClientX = e.clientX;
   lastClientY = e.clientY;
   moveGhost(lastClientX, lastClientY);
 }
 
-function onPointerUp() {
-  if (!dragGhost || !dragSourceTile) {
-    removeGhost();
-    dragSourceTile = null;
-    return;
-  }
+function onPointerUp(e) {
+  if (!dragGhost || e.pointerId !== dragPointerId) return;
+
+  lastClientX = e.clientX;
+  lastClientY = e.clientY;
 
   const elem = document.elementFromPoint(lastClientX, lastClientY);
-  const targetTile = elem && elem.closest(".tile");
+  const targetTile = elem && elem.closest("#puzzle .tile");
+  const sourceTile = dragSourceTile;
 
-  if (targetTile && targetTile !== dragSourceTile) {
-    swapTiles(dragSourceTile, targetTile);
+  cancelDrag();
+
+  if (targetTile && sourceTile && targetTile !== sourceTile) {
+    swapTiles(sourceTile, targetTile);
     renderTiles();
     checkWin();
   }
-
-  removeGhost();
-  dragSourceTile = null;
-}
-
-function onTouchMove(e) {
-  if (!dragGhost) return;
-  e.preventDefault();
-
-  const touch = e.touches[0];
-  lastClientX = touch.clientX;
-  lastClientY = touch.clientY;
-  moveGhost(lastClientX, lastClientY);
-}
-
-function onTouchEnd() {
-  onPointerUp();
 }
 
 function moveGhost(x, y) {
   if (!dragGhost) return;
-  const rect = dragGhost.getBoundingClientRect();
-  dragGhost.style.left = (x - rect.width / 2) + "px";
-  dragGhost.style.top = (y - rect.height / 2) + "px";
+  dragGhost.style.left = (x - parseFloat(dragGhost.dataset.halfW)) + "px";
+  dragGhost.style.top = (y - parseFloat(dragGhost.dataset.halfH)) + "px";
 }
 
 function removeGhost() {
@@ -265,11 +292,19 @@ function removeGhost() {
   dragGhost = null;
 }
 
+// מבטל גרירה פעילה בלי להחליף אריחים
+function cancelDrag() {
+  if (dragSourceTile) dragSourceTile.style.opacity = "";
+  removeGhost();
+  dragSourceTile = null;
+  dragPointerId = null;
+}
+
 // Global listeners
-document.addEventListener("mousemove", onPointerMove);
-document.addEventListener("mouseup", onPointerUp);
-document.addEventListener("touchmove", onTouchMove, { passive: false });
-document.addEventListener("touchend", onTouchEnd);
+document.addEventListener("pointermove", onPointerMove);
+document.addEventListener("pointerup", onPointerUp);
+document.addEventListener("pointercancel", cancelDrag);
+window.addEventListener("blur", cancelDrag);
 
 // =====================
 // Swap + Win
@@ -283,40 +318,29 @@ function swapTiles(tileA, tileB) {
 }
 
 function checkWin() {
-  let win = true;
+  if (!isSolved()) return;
 
-  for (let i = 0; i < tiles.length; i++) {
-    const correctIndex = parseInt(tiles[i].dataset.correctIndex, 10);
-    if (correctIndex !== i) {
-      win = false;
-      break;
-    }
-  }
+  gameOver = true;
 
-  if (win && winMessage) {
-    gameOver = true;
+  tiles.forEach(tile => {
+    tile.style.boxShadow = "none";
+    tile.style.cursor = "default";
+  });
 
-    tiles.forEach(tile => {
-      tile.style.border = "none";
-      tile.style.boxShadow = "none";
-      tile.style.cursor = "default";
-    });
+  if (winMessage) winMessage.style.display = "block";
 
-    winMessage.style.display = "block";
-
-    if (nextLevelBtn) {
-      if (currentLevelIndex < levels.length - 1) {
-        nextLevelBtn.style.display = "inline-block";
-      } else {
-        nextLevelBtn.style.display = "none";
-      }
-    }
+  if (nextLevelBtn) {
+    const isLastLevel = currentLevelIndex >= levels.length - 1;
+    nextLevelBtn.textContent = isLastLevel ? "PLAY AGAIN" : "NEXT LEVEL";
+    nextLevelBtn.style.display = "inline-block";
   }
 }
 
 nextLevelBtn?.addEventListener("click", () => {
   if (currentLevelIndex < levels.length - 1) {
     loadLevel(currentLevelIndex + 1);
+  } else {
+    loadLevel(0); // סיימת את כל השלבים - מתחילים מחדש
   }
 });
 

@@ -81,6 +81,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 .game{
   background: #0b0b0b;
   color: #fff;
+  align-content: start; /* הלוח צמוד למעלה ולא "צף" באמצע המסך */
 }
 
 .game-top{
