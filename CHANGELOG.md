@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.11.0] (`@@0.11.0`) - Gallery merged into Choose Level
+## [0.11.0] (`8038719`) - Gallery merged into Choose Level
 ### Changed
 - The gallery is now part of **Choose Level**. A solved level shows its picture
   with the level number and stars. Open levels stay red, locked levels grey.
