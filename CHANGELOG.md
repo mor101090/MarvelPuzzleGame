@@ -4,6 +4,16 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.11.0] (`@@0.11.0`) - Gallery merged into Choose Level
+### Changed
+- The gallery is now part of **Choose Level**. A solved level shows its picture
+  with the level number and stars. Open levels stay red, locked levels grey.
+- Tapping a solved level opens its picture full size, with stars, best moves and
+  a **Play Again** button. Tap outside to close.
+### Removed
+- The separate Gallery screen and both Gallery buttons (home and Choose Level),
+  including `assets/ui/Gallery.png`.
+
 ## [0.10.0] (`e1fecb3`) - Gallery on the home screen
 ### Added
 - **Gallery** button on the home screen, in the same style as Play and Choose

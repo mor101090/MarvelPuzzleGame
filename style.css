@@ -421,39 +421,6 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   .level-card.shake{ animation: none; }
 }
 
-.level-stars{
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 30px;
-  display: flex;
-  justify-content: center;
-  gap: 3px;
-}
-
-.level-stars .star{
-  width: 30px;
-  height: 30px;
-}
-
-.level-best{
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 9px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #fff;
-  text-shadow: 0 1px 2px #000;
-}
-
-.level-card:has(.level-stars) .level-card-num{
-  font-size: 64px;
-  transform: translateY(-14px);
-}
-
 /* ===== WIN SCREEN ===== */
 .win-card{
   align-items: center;
@@ -533,86 +500,36 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   .win-stars .star.is-on{ animation: none; }
 }
 
-/* ===== GALLERY ===== */
-.levels-top .gallery-btn{
-  justify-self: end;
-}
-
-.gallery-count{
-  margin: 18px 0 0;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #fff;
-  -webkit-text-stroke: 3px #000;
-  paint-order: stroke fill;
-}
-
-.gallery-card{
-  position: relative;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 2px solid #000;
-  border-radius: 26px;
+/* ===== SOLVED LEVEL (תמונה) ===== */
+.level-card.has-picture{
   overflow: hidden;
-  background: #E23636 center/cover no-repeat;
-  box-shadow: 0 10px 16px rgba(0,0,0,0.45);
-  cursor: pointer;
-  font: inherit;
+  align-items: flex-end;
+  background-color: #E23636;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.gallery-card:active{
-  transform: scale(0.97);
-}
-
-.gallery-card:focus-visible{
-  outline: 3px solid #fff;
-  outline-offset: 3px;
-}
-
-.gallery-card.is-locked{
-  background: #5a5657;
-  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-  cursor: not-allowed;
-}
-
-.gallery-card.shake{
-  animation: shake 0.3s;
-}
-
-.gallery-tag{
+.level-tag{
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 18px 8px 8px;
+  padding: 22px 8px 9px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.75));
+  background: linear-gradient(transparent, rgba(0,0,0,0.78));
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 1px;
 }
 
-.gallery-tag .star{
-  width: 20px;
-  height: 20px;
-}
-
-.gallery-card.is-locked .gallery-tag{
-  background: none;
-  opacity: 0.6;
-}
-
-.gallery-card.is-locked .level-lock{
-  top: 22%;
+.level-tag .star{
+  width: 24px;
+  height: 24px;
 }
 
 /* ===== PICTURE VIEWER ===== */
@@ -641,6 +558,11 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font-weight: 800;
   letter-spacing: 1px;
   color: #fff;
+}
+
+.viewer .next{
+  margin-top: 4px;
+  padding: 12px 22px;
 }
 
 .viewer-hint{

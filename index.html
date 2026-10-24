@@ -24,10 +24,6 @@
       <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level">
         <img src="assets/ui/ChooseLevel.png" alt="CHOOSE LEVEL" />
       </button>
-
-      <button id="homeGalleryBtn" class="img-btn" type="button" aria-label="Gallery">
-        <img src="assets/ui/Gallery.png" alt="GALLERY" />
-      </button>
     </div>
   </main>
 
@@ -36,21 +32,9 @@
     <div class="levels-top">
       <button id="levelsBackBtn" class="text-btn" type="button">← Back</button>
       <h1 class="levels-title">CHOOSE LEVEL</h1>
-      <button id="galleryBtn" class="text-btn gallery-btn" type="button">Gallery</button>
     </div>
 
     <div id="levelList" class="level-list"></div>
-  </main>
-
-  <!-- GALLERY SCREEN -->
-  <main id="galleryScreen" class="screen levels hidden">
-    <div class="levels-top">
-      <button id="galleryBackBtn" class="text-btn" type="button">← Back</button>
-      <h1 class="levels-title">GALLERY</h1>
-    </div>
-
-    <p id="galleryCount" class="gallery-count"></p>
-    <div id="galleryList" class="level-list"></div>
   </main>
 
   <!-- GAME SCREEN -->
@@ -109,7 +93,8 @@
     <figure class="viewer">
       <img id="viewerImg" alt="" />
       <figcaption id="viewerCaption"></figcaption>
-      <span class="viewer-hint">Tap anywhere to close</span>
+      <button id="viewerPlayBtn" class="next" type="button">PLAY AGAIN</button>
+      <span class="viewer-hint">Tap outside to close</span>
     </figure>
   </div>
 

@@ -16,15 +16,10 @@ const levelsBackBtn = document.getElementById("levelsBackBtn");
 const levelLabel = document.getElementById("levelLabel");
 const movesCount = document.getElementById("movesCount");
 const hudStars = document.getElementById("hudStars");
-const galleryScreen = document.getElementById("galleryScreen");
-const galleryList = document.getElementById("galleryList");
-const galleryCount = document.getElementById("galleryCount");
-const galleryBtn = document.getElementById("galleryBtn");
-const homeGalleryBtn = document.getElementById("homeGalleryBtn");
-const galleryBackBtn = document.getElementById("galleryBackBtn");
 const viewerModal = document.getElementById("viewerModal");
 const viewerImg = document.getElementById("viewerImg");
 const viewerCaption = document.getElementById("viewerCaption");
+const viewerPlayBtn = document.getElementById("viewerPlayBtn");
 const previewBtn = document.getElementById("previewBtn");
 const winModal = document.getElementById("winModal");
 const winTitle = document.getElementById("winTitle");
@@ -194,7 +189,7 @@ function showScreen(screen) {
   closeWinScreen();
   closeViewer();
   closePreview();
-  [homeScreen, levelScreen, galleryScreen, gameScreen].forEach(el => {
+  [homeScreen, levelScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
 }
@@ -206,15 +201,6 @@ function showHome() {
 function showLevels() {
   renderLevelSelect();
   showScreen(levelScreen);
-}
-
-// מאיפה הגענו לגלריה (מסך הבית או בחירת שלב) - לשם Back חוזר
-let galleryFrom = "levels";
-
-function showGallery(from = "levels") {
-  galleryFrom = from;
-  renderGallery();
-  showScreen(galleryScreen);
 }
 
 function showGame() {
@@ -237,9 +223,6 @@ backBtn?.addEventListener("click", () => {
 
 chooseLevelBtn?.addEventListener("click", showLevels);
 levelsBackBtn?.addEventListener("click", showHome);
-galleryBtn?.addEventListener("click", () => showGallery("levels"));
-homeGalleryBtn?.addEventListener("click", () => showGallery("home"));
-galleryBackBtn?.addEventListener("click", () => (galleryFrom === "home" ? showHome() : showLevels()));
 
 // =====================
 // Level Select
@@ -250,19 +233,10 @@ const LOCK_SVG = `
       d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/>
   </svg>`;
 
-const CHECK_SVG = `
-  <span class="level-check" aria-hidden="true">
-    <svg viewBox="0 0 24 24"><path fill="none" stroke="#1a9a4a" stroke-width="4"
-      stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-  </span>`;
-
-function cardBadge(index) {
-  const best = getBest(index);
-  if (best) {
-    return `<span class="level-stars">${starsHtml(best.stars)}</span>` +
-           `<span class="level-best">${best.moves} ${best.moves === 1 ? "move" : "moves"}</span>`;
-  }
-  return isCompleted(index) ? CHECK_SVG : "";
+function startLevel(index) {
+  started = true;
+  showGame();
+  loadLevel(index);
 }
 
 function renderLevelSelect() {
@@ -285,13 +259,24 @@ function renderLevelSelect() {
       const locked = !isUnlocked(index);
       const card = document.createElement("button");
       card.type = "button";
-      card.className = "level-card" + (locked ? " is-locked" : "");
+      const solved = !locked && isCompleted(index);
+      const best = getBest(index);
+      card.className = "level-card" + (locked ? " is-locked" : "") + (solved ? " has-picture" : "");
       card.dataset.index = index;
       card.setAttribute("aria-label",
         `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" + (getBest(index) ? `, ${getBest(index).stars} stars` : "") : ""));
-      card.innerHTML =
-        `<span class="level-card-num">${index + 1}</span>` +
-        (locked ? LOCK_SVG : cardBadge(index));
+
+      if (solved) {
+        // שלב שנפתר מציג את התמונה שלו (הגלריה) עם הכוכבים
+        card.style.backgroundImage = `url('${level.image}')`;
+        card.innerHTML =
+          `<span class="level-tag">LEVEL ${index + 1}` +
+          (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
+          `</span>`;
+      } else {
+        card.innerHTML =
+          `<span class="level-card-num">${index + 1}</span>` + (locked ? LOCK_SVG : "");
+      }
 
       card.addEventListener("click", () => {
         if (locked) {
@@ -302,9 +287,12 @@ function renderLevelSelect() {
           card.classList.add("shake");
           return;
         }
-        started = true;
-        showGame();
-        loadLevel(index);
+        // שלב שנפתר: מציגים את התמונה בגדול עם אפשרות לשחק שוב
+        if (solved) {
+          openViewer(index);
+          return;
+        }
+        startLevel(index);
       });
 
       grid.appendChild(card);
@@ -316,65 +304,13 @@ function renderLevelSelect() {
 }
 
 // =====================
-// Gallery (תמונות ששוחררו בפתרון שלב)
+// Picture viewer (תמונת שלב שנפתר)
 // =====================
-function renderGallery() {
-  galleryList.innerHTML = "";
-
-  const solved = levels.filter((_, i) => isCompleted(i)).length;
-  galleryCount.textContent = `${solved} / ${levels.length} PICTURES`;
-
-  categories.forEach(category => {
-    const section = document.createElement("section");
-
-    const title = document.createElement("h2");
-    title.className = "category-title";
-    title.textContent = category.name;
-    section.appendChild(title);
-
-    const grid = document.createElement("div");
-    grid.className = "level-grid";
-
-    levels.forEach((level, index) => {
-      if (level.category !== category.id) return;
-
-      const done = isCompleted(index);
-      const best = getBest(index);
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "gallery-card" + (done ? "" : " is-locked");
-      card.setAttribute("aria-label", done ? `Level ${index + 1} picture` : `Level ${index + 1} picture, locked`);
-
-      if (done) {
-        card.style.backgroundImage = `url('${level.image}')`;
-        card.innerHTML =
-          `<span class="gallery-tag">LEVEL ${index + 1}` +
-          (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
-          `</span>`;
-        card.addEventListener("click", () => openViewer(index));
-      } else {
-        card.innerHTML =
-          LOCK_SVG +
-          `<span class="gallery-tag">LEVEL ${index + 1}</span>`;
-        card.addEventListener("click", () => {
-          playSound("invalid");
-          vibrate([15, 40, 15]);
-          card.classList.remove("shake");
-          void card.offsetWidth;
-          card.classList.add("shake");
-        });
-      }
-
-      grid.appendChild(card);
-    });
-
-    section.appendChild(grid);
-    galleryList.appendChild(section);
-  });
-}
+let viewerIndex = -1;
 
 function openViewer(index) {
   const best = getBest(index);
+  viewerIndex = index;
   viewerImg.src = levels[index].image;
   viewerImg.alt = `Level ${index + 1}`;
   viewerCaption.innerHTML =
@@ -390,6 +326,12 @@ function closeViewer() {
 }
 
 viewerModal?.addEventListener("click", closeViewer);
+viewerPlayBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const index = viewerIndex;
+  closeViewer();
+  if (index >= 0) startLevel(index);
+});
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeViewer();
 });
