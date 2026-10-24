@@ -4,6 +4,19 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.6.0] (`@@0.6.0`) - Moves and stars
+### Added
+- **Move counter** in the game screen. Every piece or group move counts.
+- **Star rating** (1 to 3 stars) based on the number of moves. The stars at the
+  top right update live while you play, so you can see what you are about to get.
+  Defaults: 3 stars up to 1.5 moves per piece, 2 stars up to 2.5 moves per piece.
+  A level can override this with `starMoves: [threeStars, twoStars]`.
+- Best result (stars and moves) saved per level.
+- Level cards show the earned stars and the best move count.
+### Changed
+- Saved progress now includes `best`. Existing saves keep working: solved levels
+  without a result show the old check mark until replayed.
+
 ## [0.5.1] (`bd04c6b`) - Back button color
 ### Changed
 - The Back button is now translucent red, matching the other red buttons.

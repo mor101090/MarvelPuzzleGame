@@ -136,6 +136,43 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   gap: 12px;
 }
 
+.hud{
+  width: min(100%, 366px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.hud-moves{
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  font-variant-numeric: tabular-nums;
+}
+
+.stars{
+  display: inline-flex;
+  gap: 4px;
+}
+
+.star{
+  width: 28px;
+  height: 28px;
+  fill: #4a4647;
+  stroke: #000;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  transition: fill 0.2s;
+}
+
+.star.is-on{
+  fill: #ffc933;
+}
+
 #puzzle{
   touch-action: none; /* חשוב לגרירה בטאץ' */
 }
@@ -382,4 +419,37 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 @media (prefers-reduced-motion: reduce){
   .level-card.shake{ animation: none; }
+}
+
+.level-stars{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+
+.level-stars .star{
+  width: 30px;
+  height: 30px;
+}
+
+.level-best{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+.level-card:has(.level-stars) .level-card-num{
+  font-size: 64px;
+  transform: translateY(-14px);
 }

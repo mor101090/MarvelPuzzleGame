@@ -14,6 +14,8 @@ const levelScreen = document.getElementById("levelScreen");
 const levelList = document.getElementById("levelList");
 const levelsBackBtn = document.getElementById("levelsBackBtn");
 const levelLabel = document.getElementById("levelLabel");
+const movesCount = document.getElementById("movesCount");
+const hudStars = document.getElementById("hudStars");
 
 // =====================
 // Levels
@@ -71,13 +73,18 @@ let loadToken = 0;
 // =====================
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
-// completed = רשימת אינדקסים של שלבים שנפתרו
-const progress = { completed: [], ...loadProgress() };
+// completed = אינדקסים של שלבים שנפתרו
+// best = התוצאה הטובה ביותר לכל שלב: { "0": { moves: 12, stars: 3 } }
+const progress = { completed: [], best: {}, ...loadProgress() };
 
 function loadProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
-    return Array.isArray(saved?.completed) ? { completed: saved.completed } : {};
+    if (!Array.isArray(saved?.completed)) return {};
+    return {
+      completed: saved.completed,
+      best: saved.best && typeof saved.best === "object" ? saved.best : {}
+    };
   } catch {
     return {};
   }
@@ -93,6 +100,57 @@ function saveProgress() {
 
 function isCompleted(index) {
   return progress.completed.includes(index);
+}
+
+function getBest(index) {
+  return progress.best[index] || null;
+}
+
+// שומר תוצאה ומחזיר true אם זה שיא חדש
+function recordResult(index, moves, stars) {
+  if (!isCompleted(index)) progress.completed.push(index);
+
+  const prev = getBest(index);
+  const isNewBest = !prev || moves < prev.moves;
+  if (isNewBest) {
+    progress.best[index] = { moves, stars };
+  }
+  saveProgress();
+  return isNewBest;
+}
+
+// =====================
+// Moves + Stars
+// =====================
+let moves = 0;
+
+// 3 כוכבים עד ~1.5 מהלכים לחלק, 2 כוכבים עד ~2.5 (אפשר לדרוס בשלב: starMoves: [3כוכבים, 2כוכבים])
+function starLimits(index) {
+  const custom = levels[index].starMoves;
+  if (custom) return { three: custom[0], two: custom[1] };
+  const n = levels[index].grid * levels[index].grid;
+  return { three: Math.ceil(n * 1.5), two: Math.ceil(n * 2.5) };
+}
+
+function starsForMoves(index, count) {
+  const { three, two } = starLimits(index);
+  return count <= three ? 3 : count <= two ? 2 : 1;
+}
+
+const STAR_PATH = "M12 2.3l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.4l-6 3.3 1.3-6.7-5-4.7 6.8-.8z";
+
+function starsHtml(count, total = 3) {
+  let html = "";
+  for (let i = 0; i < total; i++) {
+    html += `<svg class="star${i < count ? " is-on" : ""}" viewBox="0 0 24 24" aria-hidden="true">` +
+            `<path d="${STAR_PATH}"/></svg>`;
+  }
+  return html;
+}
+
+function updateHud() {
+  if (movesCount) movesCount.textContent = moves;
+  if (hudStars) hudStars.innerHTML = starsHtml(starsForMoves(currentLevelIndex, moves));
 }
 
 // שלב נפתח אם הוא הראשון, או שהקודם לו נפתר
@@ -161,6 +219,15 @@ const CHECK_SVG = `
       stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
   </span>`;
 
+function cardBadge(index) {
+  const best = getBest(index);
+  if (best) {
+    return `<span class="level-stars">${starsHtml(best.stars)}</span>` +
+           `<span class="level-best">${best.moves} ${best.moves === 1 ? "move" : "moves"}</span>`;
+  }
+  return isCompleted(index) ? CHECK_SVG : "";
+}
+
 function renderLevelSelect() {
   levelList.innerHTML = "";
 
@@ -184,10 +251,10 @@ function renderLevelSelect() {
       card.className = "level-card" + (locked ? " is-locked" : "");
       card.dataset.index = index;
       card.setAttribute("aria-label",
-        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" : ""));
+        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" + (getBest(index) ? `, ${getBest(index).stars} stars` : "") : ""));
       card.innerHTML =
         `<span class="level-card-num">${index + 1}</span>` +
-        (locked ? LOCK_SVG : isCompleted(index) ? CHECK_SVG : "");
+        (locked ? LOCK_SVG : cardBadge(index));
 
       card.addEventListener("click", () => {
         if (locked) {
@@ -221,6 +288,8 @@ function loadLevel(index) {
   if (levelLabel) levelLabel.textContent = `LEVEL ${index + 1}`;
 
   gameOver = false;
+  moves = 0;
+  updateHud();
   cancelDrag();
   tiles.length = 0;
   puzzle.innerHTML = "";
@@ -524,6 +593,8 @@ function onPointerUp(e) {
   }
 
   renderTiles();
+  moves++;
+  updateHud();
 
   if (countJoins() > joinsBefore) {
     playSound("snap");
@@ -626,10 +697,8 @@ function checkWin() {
 
   gameOver = true;
 
-  if (!isCompleted(currentLevelIndex)) {
-    progress.completed.push(currentLevelIndex);
-    saveProgress();
-  }
+  const stars = starsForMoves(currentLevelIndex, moves);
+  recordResult(currentLevelIndex, moves, stars);
 
   tiles.forEach(tile => {
     tile.style.boxShadow = "none";
