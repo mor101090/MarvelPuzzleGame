@@ -20,7 +20,6 @@ const viewerModal = document.getElementById("viewerModal");
 const viewerImg = document.getElementById("viewerImg");
 const viewerCaption = document.getElementById("viewerCaption");
 const viewerPlayBtn = document.getElementById("viewerPlayBtn");
-const previewBtn = document.getElementById("previewBtn");
 const winModal = document.getElementById("winModal");
 const winTitle = document.getElementById("winTitle");
 const winStars = document.getElementById("winStars");
@@ -204,7 +203,6 @@ function showScreen(screen) {
   cancelDrag();
   closeWinScreen();
   closeViewer();
-  closePreview();
   [homeScreen, levelScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
@@ -282,7 +280,7 @@ function renderLevelSelect() {
       card.type = "button";
       const solved = !locked && isCompleted(index);
       const best = getBest(index);
-      card.className = "level-card" + (locked ? " is-locked" : "") + (solved ? " has-picture" : "");
+      card.className = "level-card" + (locked ? " is-locked" : solved ? " has-picture" : " is-open");
       card.dataset.index = index;
       card.setAttribute("aria-label",
         `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? ", completed" + (getBest(index) ? `, ${getBest(index).stars} stars` : "") : ""));
@@ -297,11 +295,8 @@ function renderLevelSelect() {
       } else if (locked) {
         card.innerHTML = LOCK_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
       } else {
-        // שלב פתוח שעוד לא נפתר: התמונה מטושטשת וסימן play
-        card.innerHTML =
-          `<span class="level-teaser" style="background-image:url('${level.thumb}')"></span>` +
-          PLAY_SVG +
-          `<span class="level-tag">LEVEL ${index + 1}</span>`;
+        // שלב פתוח שעוד לא נפתר: בלי תמונה - לא רואים איך הפאזל נראה עד שפותרים
+        card.innerHTML = PLAY_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
       }
 
       card.addEventListener("click", () => {
@@ -363,42 +358,6 @@ document.addEventListener("keydown", (e) => {
 });
 
 // =====================
-// Preview (מציץ בתמונה המלאה - בלי עונש על כוכבים)
-// =====================
-const PREVIEW_MS = 3000;
-let previewEl = null;
-let previewTimer = null;
-
-function openPreview() {
-  if (previewEl || !tiles.length || gameOver) return;
-
-  cancelDrag();
-  const rect = puzzle.getBoundingClientRect();
-
-  previewEl = document.createElement("div");
-  previewEl.className = "preview-overlay";
-  previewEl.style.left = rect.left + puzzle.clientLeft + "px";
-  previewEl.style.top = rect.top + puzzle.clientTop + "px";
-  previewEl.style.width = puzzleWidth + "px";
-  previewEl.style.height = puzzleHeight + "px";
-  previewEl.style.backgroundImage = `url('${currentImageSrc}')`;
-  previewEl.addEventListener("click", closePreview);
-  document.body.appendChild(previewEl);
-
-  clearTimeout(previewTimer);
-  previewTimer = setTimeout(closePreview, PREVIEW_MS);
-}
-
-function closePreview() {
-  clearTimeout(previewTimer);
-  previewEl?.remove();
-  previewEl = null;
-}
-
-previewBtn?.addEventListener("click", () => (previewEl ? closePreview() : openPreview()));
-window.addEventListener("resize", closePreview);
-
-// =====================
 // Level Loader
 // =====================
 function loadLevel(index) {
@@ -411,7 +370,6 @@ function loadLevel(index) {
   moves = 0;
   updateHud();
   closeWinScreen();
-  closePreview();
   cancelDrag();
   tiles.length = 0;
   puzzle.innerHTML = "";
@@ -610,7 +568,6 @@ function updateTileEdges() {
 // =====================
 function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
-  closePreview();
   if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
 
   const sourceIndex = tiles.indexOf(tile);
@@ -820,7 +777,6 @@ function checkWin() {
   if (!isSolved()) return;
 
   gameOver = true;
-  closePreview();
 
   const stars = starsForMoves(currentLevelIndex, moves);
   const isNewBest = recordResult(currentLevelIndex, moves, stars);

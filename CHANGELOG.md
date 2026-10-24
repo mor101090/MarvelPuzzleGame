@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.14.0] (`@@0.14.0`) - No spoilers
+### Removed
+- **Preview** button. The player now has to work out the picture.
+- The blurred picture on the next level in Choose Level.
+### Changed
+- The next level to play is a dark card with a play sign and a gold outline. A
+  picture only appears in Choose Level after the level is solved.
+### Added
+- `tools/add_level.py`: converts any picture to WebP (max 1200px) and creates its
+  thumbnail. Steps for adding a level are in the README.
+
 ## [0.13.0] (`26e2c05`) - Three new levels and faster images
 ### Added
 - Three new levels: Wolverine, Civil War and Iron Man. There are now 5 levels,
