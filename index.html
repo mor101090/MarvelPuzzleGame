@@ -10,7 +10,7 @@
 <body>
   <!-- HOME SCREEN -->
   <main id="homeScreen" class="screen home">
-    <button id="settingsBtn" class="icon-btn" aria-label="Settings" type="button">
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings" type="button" data-open-settings>
       <img src="assets/ui/Preference.png" alt="" />
     </button>
 
@@ -21,19 +21,38 @@
         <img src="assets/ui/Play.png" alt="PLAY" />
       </button>
 
-      <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level" disabled>
+      <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level">
         <img src="assets/ui/ChooseLevel.png" alt="CHOOSE LEVEL" />
       </button>
     </div>
+  </main>
+
+  <!-- LEVEL SELECT SCREEN -->
+  <main id="levelScreen" class="screen levels hidden">
+    <div class="levels-top">
+      <button id="levelsBackBtn" class="text-btn" type="button">← Back</button>
+      <h1 class="levels-title">CHOOSE LEVEL</h1>
+    </div>
+
+    <div id="levelList" class="level-list"></div>
   </main>
 
   <!-- GAME SCREEN -->
   <main id="gameScreen" class="screen game hidden">
     <div class="game-top">
       <button id="backBtn" class="text-btn" type="button">← Back</button>
+      <div id="levelLabel" class="level-label">LEVEL 1</div>
+      <button class="icon-btn icon-btn--small" aria-label="Settings" type="button" data-open-settings>
+        <img src="assets/ui/Preference.png" alt="" />
+      </button>
     </div>
 
     <div id="puzzleWrap">
+      <div class="hud">
+        <span class="hud-moves">MOVES <b id="movesCount">0</b></span>
+        <span id="hudStars" class="stars hud-stars" aria-label="Difficulty"></span>
+      </div>
+
       <div id="puzzle"></div>
 
       <div id="winMessage" class="win" style="display:none;">YOU WON!</div>
@@ -41,6 +60,58 @@
     </div>
   </main>
 
+  <!-- SETTINGS -->
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card">
+      <h2 id="settingsTitle">Settings</h2>
+
+      <label class="toggle-row" for="soundToggle">
+        <span>Sound effects</span>
+        <input id="soundToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <label class="toggle-row" for="musicToggle">
+        <span>Music <small>coming soon</small></span>
+        <input id="musicToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <label class="toggle-row" for="vibrationToggle">
+        <span>Vibration</span>
+        <input id="vibrationToggle" class="toggle" type="checkbox" />
+      </label>
+
+      <button id="closeSettingsBtn" class="next" type="button">DONE</button>
+    </div>
+  </div>
+
+  <!-- GALLERY VIEWER -->
+  <div id="viewerModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Picture">
+    <figure class="viewer">
+      <img id="viewerImg" alt="" />
+      <figcaption id="viewerCaption"></figcaption>
+      <div id="viewerLevels" class="diff-row"></div>
+      <span class="viewer-hint">Tap outside to close</span>
+    </figure>
+  </div>
+
+  <!-- WIN SCREEN -->
+  <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="modal-card win-card">
+      <h2 id="winTitle">LEVEL 1 COMPLETE</h2>
+      <div id="winStars" class="stars win-stars" aria-hidden="true"></div>
+      <p id="winStats" class="win-stats"></p>
+
+      <button id="winNextBtn" class="next" type="button">NEXT LEVEL</button>
+      <div class="win-row">
+        <button id="winReplayBtn" class="text-btn" type="button">↻ Replay</button>
+        <button id="winHarderBtn" class="text-btn" type="button">▲ Medium</button>
+        <button id="winLevelsBtn" class="text-btn" type="button">Levels</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+  <script src="sound.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

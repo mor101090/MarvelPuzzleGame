@@ -10,22 +10,67 @@ const gameScreen = document.getElementById("gameScreen");
 const playBtn = document.getElementById("playBtn");
 const backBtn = document.getElementById("backBtn");
 const chooseLevelBtn = document.getElementById("chooseLevelBtn");
+const levelScreen = document.getElementById("levelScreen");
+const levelList = document.getElementById("levelList");
+const levelsBackBtn = document.getElementById("levelsBackBtn");
+const levelLabel = document.getElementById("levelLabel");
+const movesCount = document.getElementById("movesCount");
+const hudStars = document.getElementById("hudStars");
+const viewerModal = document.getElementById("viewerModal");
+const viewerImg = document.getElementById("viewerImg");
+const viewerCaption = document.getElementById("viewerCaption");
+const viewerLevels = document.getElementById("viewerLevels");
+const winModal = document.getElementById("winModal");
+const winTitle = document.getElementById("winTitle");
+const winStars = document.getElementById("winStars");
+const winStats = document.getElementById("winStats");
+const winNextBtn = document.getElementById("winNextBtn");
+const winReplayBtn = document.getElementById("winReplayBtn");
+const winLevelsBtn = document.getElementById("winLevelsBtn");
+const winHarderBtn = document.getElementById("winHarderBtn");
 
 // =====================
 // Levels
 // =====================
 // IMPORTANT: GitHub Pages case-sensitive
-const levels = [
-  { image: "level3.jpeg", grid: 3 },
-  { image: "level4.jpg",  grid: 4 } // אם הקובץ שלך באמת level4.JPG תשנה כאן ל-"level4.JPG"
+// רמות קושי לכל שלב: מספר החלקים בבינוני הוא פי 2 מהקל, ובקשה פי 2 מהבינוני.
+// הכוכבים של השלב = הרמה הגבוהה ביותר שנפתרה (1 קל, 2 בינוני, 3 קשה).
+const DIFFICULTIES = [
+  { name: "Easy",   factor: 1 },
+  { name: "Medium", factor: 2 },
+  { name: "Hard",   factor: 4 }
 ];
+// קטגוריות: כדי להוסיף קטגוריה קשה יותר - מוסיפים כאן ומסמנים category בשלבים
+const categories = [
+  { id: "easy", name: "Easy" }
+];
+
+// הסדר כאן הוא סדר השלבים (ממוין לפי שם הקובץ). id קבוע - ההתקדמות נשמרת לפיו,
+// כך שאפשר להוסיף או לסדר שלבים בלי לאבד התקדמות.
+// thumb = גרסה קטנה לכרטיסים במסך בחירת השלב (נטענת מהר)
+const levels = [
+  { id: "1",      grid: 3, category: "easy" },
+  { id: "2",      grid: 3, category: "easy" },
+  { id: "3",      grid: 4, category: "easy" },
+  { id: "level3", grid: 3, category: "easy" },
+  { id: "level4", grid: 4, category: "easy" }
+].map(level => ({
+  ...level,
+  image: `assets/levels/${level.id}.webp`,
+  thumb: `assets/levels/thumbs/${level.id}.webp`
+}));
 
 let currentLevelIndex = 0;
 let currentImageSrc = levels[0].image;
-let gridSize = levels[0].grid;
+let currentDifficulty = 1;   // 1 קל, 2 בינוני, 3 קשה
+let cols = levels[0].grid;
+let rows = levels[0].grid;
+let imageAspect = 1;
 
 // Puzzle sizing
 const maxPuzzleSize = 360;
+const boardBorder = 3;   // גבול אדום סביב הלוח
+const sideGutter = 12;   // ריווח מהצדדים במסך צר
 
 // Tiles
 const tiles = [];
@@ -33,9 +78,16 @@ let gameOver = false;
 
 // Drag
 let dragSourceTile = null;
+let dragGroup = [];        // מיקומים (אינדקסים) של כל החלקים שנגררים ביחד
 let dragGhost = null;
+let dragPointerId = null;
+let dragGrab = null;       // איפה בתוך החלק תפסנו + גודל חלק
+let hoverCellKey = null;   // התא שמעליו הגרירה נמצאת (לרטט "טיק" במעבר בין תאים)
 let lastClientX = 0;
 let lastClientY = 0;
+
+const EDGE_COLOR = "#ED1D24";
+const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 // Board size
 let puzzleWidth = 0;
@@ -44,24 +96,169 @@ let puzzleHeight = 0;
 // Navigation
 let started = false;
 
+// מונע מטעינת תמונה ישנה לדרוס שלב חדש (למשל לחיצה מהירה על NEXT LEVEL)
+let loadToken = 0;
+
+// השהיה קצרה אחרי הניצחון כדי ליהנות מהתמונה המושלמת לפני מסך הניצחון
+const WIN_SCREEN_DELAY = 900;
+let winTimer = null;
+let winStarTimers = [];
+
+// =====================
+// Progress (נשמר במכשיר)
+// =====================
+const PROGRESS_KEY = "marvelPuzzle.progress";
+
+// level = { "level3": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
+// שמירות ישנות: version 1 נשמרו לפי אינדקס, version 2 לפי id עם כוכבי מהלכים
+const LEGACY_IDS = ["level3", "level4"];
+
+const progress = { level: {}, ...loadProgress() };
+
+function loadProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+    if (!saved) return {};
+
+    if (saved.version === 3 && saved.level && typeof saved.level === "object") {
+      return { level: saved.level };
+    }
+
+    // המרה מהפורמט הישן: כל שלב שנפתר נחשב כקל שנפתר
+    if (Array.isArray(saved.completed)) {
+      const legacy = !saved.version;
+      const level = {};
+      saved.completed.forEach(key => {
+        level[(legacy && LEGACY_IDS[key]) || String(key)] = 1;
+      });
+      return { level };
+    }
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 3, ...progress }));
+  } catch {
+    // אחסון חסום - ההתקדמות תחזיק עד רענון
+  }
+}
+
+// הרמה הגבוהה ביותר שנפתרה בשלב (0-3) = מספר הכוכבים
+function getStars(index) {
+  return progress.level[levels[index].id] || 0;
+}
+
+function isCompleted(index) {
+  return getStars(index) >= 1;
+}
+
+// רמה נפתחת אחרי שהרמה שלפניה נפתרה
+function isDifficultyUnlocked(index, difficulty) {
+  return difficulty === 1 || getStars(index) >= difficulty - 1;
+}
+
+function recordResult(index, difficulty) {
+  const id = levels[index].id;
+  if (difficulty > (progress.level[id] || 0)) {
+    progress.level[id] = difficulty;
+    saveProgress();
+  }
+}
+
+// מספר החלקים ברמה (הקל = רשת בגודל grid x grid)
+function pieceCount(index, difficulty) {
+  const base = levels[index].grid * levels[index].grid;
+  return base * DIFFICULTIES[difficulty - 1].factor;
+}
+
+// בוחר cols x rows שמכפלתם בדיוק מספר החלקים, כך שהחלקים יהיו הכי קרובים לריבוע
+function gridFor(index, difficulty, aspect) {
+  const n = pieceCount(index, difficulty);
+  if (difficulty === 1) return { cols: levels[index].grid, rows: levels[index].grid };
+
+  let best = null;
+  for (let c = 2; c <= n / 2; c++) {
+    if (n % c) continue;
+    const r = n / c;
+    const tileAspect = aspect * r / c; // רוחב/גובה של חלק
+    const score = Math.abs(Math.log(tileAspect));
+    if (!best || score < best.score) best = { cols: c, rows: r, score };
+  }
+  return best || { cols: levels[index].grid, rows: levels[index].grid };
+}
+
+// =====================
+// Moves + Stars
+// =====================
+let moves = 0;
+
+const STAR_PATH = "M12 2.3l2.9 6.2 6.8.8-5 4.7 1.3 6.7L12 17.4l-6 3.3 1.3-6.7-5-4.7 6.8-.8z";
+
+function starsHtml(count, total = 3) {
+  let html = "";
+  for (let i = 0; i < total; i++) {
+    html += `<svg class="star${i < count ? " is-on" : ""}" viewBox="0 0 24 24" aria-hidden="true">` +
+            `<path d="${STAR_PATH}"/></svg>`;
+  }
+  return html;
+}
+
+function updateHud() {
+  if (movesCount) movesCount.textContent = moves;
+  if (hudStars) hudStars.innerHTML = starsHtml(currentDifficulty);
+  if (levelLabel) {
+    levelLabel.innerHTML =
+      `LEVEL ${currentLevelIndex + 1}<small>${DIFFICULTIES[currentDifficulty - 1].name}</small>`;
+  }
+}
+
+// שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
+function isUnlocked(index) {
+  return index === 0 || isCompleted(index) || isCompleted(index - 1);
+}
+
+// השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
+function nextPlayableLevel() {
+  const i = levels.findIndex((_, idx) => !isCompleted(idx));
+  return i === -1 ? levels.length - 1 : i;
+}
+
 // =====================
 // Screen Navigation
 // =====================
+function showScreen(screen) {
+  cancelDrag();
+  closeWinScreen();
+  closeViewer();
+  [homeScreen, levelScreen, gameScreen].forEach(el => {
+    el?.classList.toggle("hidden", el !== screen);
+  });
+}
+
 function showHome() {
-  homeScreen?.classList.remove("hidden");
-  gameScreen?.classList.add("hidden");
+  showScreen(homeScreen);
+}
+
+function showLevels() {
+  renderLevelSelect();
+  showScreen(levelScreen);
 }
 
 function showGame() {
-  homeScreen?.classList.add("hidden");
-  gameScreen?.classList.remove("hidden");
+  showScreen(gameScreen);
 }
 
 playBtn?.addEventListener("click", () => {
   showGame();
   if (!started) {
     started = true;
-    loadLevel(0);
+    loadLevel(nextPlayableLevel(), 1);
+  } else {
+    layoutPuzzle();
   }
 });
 
@@ -69,101 +266,261 @@ backBtn?.addEventListener("click", () => {
   showHome();
 });
 
-chooseLevelBtn?.addEventListener("click", () => {
-  // כרגע לא פעיל - נשאיר להמשך
+chooseLevelBtn?.addEventListener("click", showLevels);
+levelsBackBtn?.addEventListener("click", showHome);
+
+// =====================
+// Level Select
+// =====================
+const LOCK_SVG = `
+  <svg class="level-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"
+      d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9z"/>
+  </svg>`;
+
+const PLAY_SVG = `
+  <svg class="level-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round" d="M7 3.5v17l14-8.5z"/>
+  </svg>`;
+
+function startLevel(index, difficulty = 1) {
+  started = true;
+  showGame();
+  loadLevel(index, difficulty);
+}
+
+function renderLevelSelect() {
+  levelList.innerHTML = "";
+
+  categories.forEach(category => {
+    const section = document.createElement("section");
+
+    const title = document.createElement("h2");
+    title.className = "category-title";
+    title.textContent = category.name;
+    section.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "level-grid";
+
+    levels.forEach((level, index) => {
+      if (level.category !== category.id) return;
+
+      const locked = !isUnlocked(index);
+      const card = document.createElement("button");
+      card.type = "button";
+      const solved = !locked && isCompleted(index);
+      const stars = getStars(index);
+      card.className = "level-card" + (locked ? " is-locked" : solved ? " has-picture" : " is-open");
+      card.dataset.index = index;
+      card.setAttribute("aria-label",
+        `Level ${index + 1}` + (locked ? ", locked" : isCompleted(index) ? `, ${stars} of 3 stars` : ""));
+
+      if (solved) {
+        // שלב שנפתר: התמונה עצמה, עם מספר השלב והכוכבים
+        card.style.backgroundImage = `url('${level.thumb}')`;
+        card.innerHTML =
+          `<span class="level-tag">LEVEL ${index + 1}` +
+          `<span class="stars">${starsHtml(stars)}</span>` +
+          `</span>`;
+      } else if (locked) {
+        card.innerHTML = LOCK_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
+      } else {
+        // שלב פתוח שעוד לא נפתר: בלי תמונה - לא רואים איך הפאזל נראה עד שפותרים
+        card.innerHTML = PLAY_SVG + `<span class="level-tag">LEVEL ${index + 1}</span>`;
+      }
+
+      card.addEventListener("click", () => {
+        if (locked) {
+          playSound("invalid");
+          vibrate([15, 40, 15]);
+          card.classList.remove("shake");
+          void card.offsetWidth; // מאתחל את האנימציה
+          card.classList.add("shake");
+          return;
+        }
+        // שלב שנפתר: מציגים את התמונה בגדול עם אפשרות לשחק שוב
+        if (solved) {
+          openViewer(index);
+          return;
+        }
+        startLevel(index);
+      });
+
+      grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    levelList.appendChild(section);
+  });
+}
+
+// =====================
+// Picture viewer (תמונת שלב שנפתר)
+// =====================
+let viewerIndex = -1;
+
+function openViewer(index) {
+  viewerIndex = index;
+  viewerImg.src = levels[index].image;
+  viewerImg.alt = `Level ${index + 1}`;
+  viewerCaption.innerHTML =
+    `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`;
+
+  // כפתורי רמות: קל / בינוני / קשה (נפתחות לפי הסדר)
+  viewerLevels.innerHTML = "";
+  DIFFICULTIES.forEach((d, i) => {
+    const difficulty = i + 1;
+    const unlocked = isDifficultyUnlocked(index, difficulty);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "diff-btn" + (unlocked ? "" : " is-locked") + (getStars(index) >= difficulty ? " is-done" : "");
+    btn.innerHTML =
+      `<span class="diff-name">${d.name}</span>` +
+      `<small>${pieceCount(index, difficulty)} pieces</small>` +
+      (unlocked ? "" : LOCK_SVG);
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!unlocked) {
+        playSound("invalid");
+        vibrate([15, 40, 15]);
+        btn.classList.remove("shake");
+        void btn.offsetWidth;
+        btn.classList.add("shake");
+        return;
+      }
+      closeViewer();
+      startLevel(index, difficulty);
+    });
+    viewerLevels.appendChild(btn);
+  });
+
+  viewerModal.classList.remove("hidden");
+}
+
+function closeViewer() {
+  viewerModal?.classList.add("hidden");
+}
+
+viewerModal?.addEventListener("click", closeViewer);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeViewer();
 });
 
 // =====================
 // Level Loader
 // =====================
-function loadLevel(index) {
+function loadLevel(index, difficulty = 1) {
   currentLevelIndex = index;
+  currentDifficulty = difficulty;
   currentImageSrc = levels[index].image;
-  gridSize = levels[index].grid;
 
   gameOver = false;
-  dragSourceTile = null;
-  removeGhost();
+  moves = 0;
+  updateHud();
+  closeWinScreen();
+  cancelDrag();
   tiles.length = 0;
+  puzzle.innerHTML = "";
 
   if (winMessage) winMessage.style.display = "none";
   if (nextLevelBtn) nextLevelBtn.style.display = "none";
 
+  const token = ++loadToken;
+  if (levels[index + 1]) new Image().src = levels[index + 1].image; // מטעינים מראש את השלב הבא
   const img = new Image();
-  img.src = currentImageSrc;
 
   img.onload = () => {
-    const aspect = img.naturalWidth / img.naturalHeight;
+    if (token !== loadToken) return;
 
-    if (aspect >= 1) {
-      puzzleWidth = maxPuzzleSize;
-      puzzleHeight = maxPuzzleSize / aspect;
-    } else {
-      puzzleHeight = maxPuzzleSize;
-      puzzleWidth = maxPuzzleSize * aspect;
-    }
+    imageAspect = img.naturalWidth / img.naturalHeight;
+    ({ cols, rows } = gridFor(index, difficulty, imageAspect));
 
-    // Board styles
-    puzzle.style.width = puzzleWidth + "px";
-    puzzle.style.height = puzzleHeight + "px";
-    puzzle.style.margin = "12px auto";
-    puzzle.style.display = "grid";
-    puzzle.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-    puzzle.style.border = "3px solid #ED1D24";
-
-    createTiles(puzzleWidth, puzzleHeight);
+    createTiles();
     shuffleTiles();
     renderTiles();
+    layoutPuzzle();
   };
 
   img.onerror = () => {
+    if (token !== loadToken) return;
     console.error("Image not found:", currentImageSrc);
     alert(`Image not found: ${currentImageSrc}\nCheck filename (case-sensitive on GitHub Pages).`);
   };
+
+  img.src = currentImageSrc;
 }
+
+// =====================
+// Layout (responsive)
+// =====================
+function layoutPuzzle() {
+  if (!tiles.length) return;
+
+  // הלוח לא יחרוג מרוחב המסך בטלפונים צרים
+  const available = Math.max(120, window.innerWidth - 2 * sideGutter - 2 * boardBorder);
+  const size = Math.min(maxPuzzleSize, available);
+
+  if (imageAspect >= 1) {
+    puzzleWidth = size;
+    puzzleHeight = size / imageAspect;
+  } else {
+    puzzleHeight = size;
+    puzzleWidth = size * imageAspect;
+  }
+
+  const tileWidth = puzzleWidth / cols;
+  const tileHeight = puzzleHeight / rows;
+
+  // content-box: הגבול נוסף מסביב ולא "אוכל" מהאריחים
+  puzzle.style.boxSizing = "content-box";
+  puzzle.style.width = puzzleWidth + "px";
+  puzzle.style.height = puzzleHeight + "px";
+  puzzle.style.margin = "12px auto";
+  puzzle.style.display = "grid";
+  puzzle.style.gridTemplateColumns = `repeat(${cols}, ${tileWidth}px)`;
+  puzzle.style.gridAutoRows = `${tileHeight}px`;
+  puzzle.style.border = `${boardBorder}px solid #ED1D24`;
+
+  tiles.forEach(tile => {
+    const i = parseInt(tile.dataset.correctIndex, 10);
+    const x = i % cols;
+    const y = Math.floor(i / cols);
+    tile.style.width = tileWidth + "px";
+    tile.style.height = tileHeight + "px";
+    tile.style.backgroundSize = `${puzzleWidth}px ${puzzleHeight}px`;
+    tile.style.backgroundPosition = `-${x * tileWidth}px -${y * tileHeight}px`;
+  });
+}
+
+window.addEventListener("resize", layoutPuzzle);
 
 // =====================
 // Create Tiles
 // =====================
-function createTiles(pWidth, pHeight) {
+function createTiles() {
   puzzle.innerHTML = "";
   tiles.length = 0;
-  dragSourceTile = null;
-  removeGhost();
+  cancelDrag();
   gameOver = false;
 
-  const tileWidth = pWidth / gridSize;
-  const tileHeight = pHeight / gridSize;
-
-  for (let i = 0; i < gridSize * gridSize; i++) {
+  for (let i = 0; i < cols * rows; i++) {
     const tile = document.createElement("div");
     tile.className = "tile";
 
-    tile.style.border = "1px solid #ED1D24";
-    tile.style.boxSizing = "border-box";
-    tile.style.height = tileHeight + "px";
     tile.style.backgroundImage = `url('${currentImageSrc}')`;
-    tile.style.backgroundSize = `${pWidth}px ${pHeight}px`;
+    tile.style.backgroundRepeat = "no-repeat";
     tile.style.cursor = "grab";
-
-    const x = i % gridSize;
-    const y = Math.floor(i / gridSize);
-    tile.style.backgroundPosition = `-${x * tileWidth}px -${y * tileHeight}px`;
+    tile.style.userSelect = "none";
 
     tile.dataset.correctIndex = i;
 
-    // Mouse drag
-    tile.addEventListener("mousedown", (e) => {
+    // Pointer Events: עכבר + מגע + עט במקום אחד
+    tile.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
-      startDrag(tile, e.clientX, e.clientY);
+      startDrag(tile, e.pointerId, e.clientX, e.clientY);
     });
-
-    // Touch drag (ignore multi-touch)
-    tile.addEventListener("touchstart", (e) => {
-      if (e.touches.length > 1) return;
-      const touch = e.touches[0];
-      startDrag(tile, touch.clientX, touch.clientY);
-    }, { passive: true });
 
     tiles.push(tile);
   }
@@ -172,90 +529,263 @@ function createTiles(pWidth, pHeight) {
 // =====================
 // Shuffle / Render
 // =====================
+function isSolved() {
+  return tiles.every((tile, i) => parseInt(tile.dataset.correctIndex, 10) === i);
+}
+
 function shuffleTiles() {
-  for (let i = tiles.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-  }
+  // ערבוב חוזר עד שהלוח לא פתור כבר מההתחלה
+  do {
+    for (let i = tiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+  } while (tiles.length > 1 && isSolved());
 }
 
 function renderTiles() {
   puzzle.innerHTML = "";
   tiles.forEach(tile => puzzle.appendChild(tile));
+  updateTileEdges();
+}
+
+// =====================
+// Connected pieces
+// =====================
+function cellOf(index) {
+  return { r: Math.floor(index / cols), c: index % cols };
+}
+
+function correctCellOf(tile) {
+  return cellOf(parseInt(tile.dataset.correctIndex, 10));
+}
+
+function inBounds(r, c) {
+  return r >= 0 && r < rows && c >= 0 && c < cols;
+}
+
+// האם החלק במיקום index מחובר נכון לשכן שלו בכיוון (dr, dc)
+function isJoined(index, dr, dc) {
+  const { r, c } = cellOf(index);
+  if (!inBounds(r + dr, c + dc)) return false;
+
+  const a = correctCellOf(tiles[index]);
+  const b = correctCellOf(tiles[(r + dr) * cols + (c + dc)]);
+  return b.r === a.r + dr && b.c === a.c + dc;
+}
+
+// כל החלקים שמחוברים (ישירות או דרך שכנים) לחלק במיקום index
+function getGroup(index) {
+  const group = [index];
+  const seen = new Set(group);
+
+  for (let k = 0; k < group.length; k++) {
+    const { r, c } = cellOf(group[k]);
+    DIRS.forEach(([dr, dc]) => {
+      const next = (r + dr) * cols + (c + dc);
+      if (!seen.has(next) && isJoined(group[k], dr, dc)) {
+        seen.add(next);
+        group.push(next);
+      }
+    });
+  }
+  return group;
+}
+
+function countJoins() {
+  let joins = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    if (isJoined(i, 0, 1)) joins++;
+    if (isJoined(i, 1, 0)) joins++;
+  }
+  return joins;
+}
+
+// קו אדום רק בצדדים שלא מחוברים - ככה רואים אילו חלקים "נדבקו"
+function updateTileEdges() {
+  tiles.forEach((tile, i) => {
+    const lines = [];
+    if (!isJoined(i, -1, 0)) lines.push(`inset 0 1px 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 1, 0))  lines.push(`inset 0 -1px 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 0, -1)) lines.push(`inset 1px 0 0 0 ${EDGE_COLOR}`);
+    if (!isJoined(i, 0, 1))  lines.push(`inset -1px 0 0 0 ${EDGE_COLOR}`);
+    tile.style.boxShadow = lines.join(", ") || "none";
+  });
 }
 
 // =====================
 // Drag Logic
 // =====================
-function startDrag(tile, clientX, clientY) {
+function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
-  if (dragGhost) return;
+  if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
+
+  const sourceIndex = tiles.indexOf(tile);
+  if (sourceIndex === -1) return;
 
   dragSourceTile = tile;
+  dragGroup = getGroup(sourceIndex);
+  dragPointerId = pointerId;
   lastClientX = clientX;
   lastClientY = clientY;
 
   const rect = tile.getBoundingClientRect();
-  dragGhost = tile.cloneNode(true);
+  const tileW = rect.width;
+  const tileH = rect.height;
+
+  // גבולות הקבוצה ברשת
+  const cells = dragGroup.map(cellOf);
+  const minR = Math.min(...cells.map(p => p.r));
+  const maxR = Math.max(...cells.map(p => p.r));
+  const minC = Math.min(...cells.map(p => p.c));
+  const maxC = Math.max(...cells.map(p => p.c));
+  const src = cellOf(sourceIndex);
+
+  dragGrab = {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+    tileW,
+    tileH,
+    // המרחק מפינת ה"רוח" לנקודה שתפסנו
+    ghostX: (src.c - minC) * tileW + (clientX - rect.left),
+    ghostY: (src.r - minR) * tileH + (clientY - rect.top)
+  };
+
+  dragGhost = document.createElement("div");
   dragGhost.style.position = "fixed";
-  dragGhost.style.left = rect.left + "px";
-  dragGhost.style.top = rect.top + "px";
-  dragGhost.style.width = rect.width + "px";
-  dragGhost.style.height = rect.height + "px";
+  dragGhost.style.left = "0px";
+  dragGhost.style.top = "0px";
+  dragGhost.style.width = (maxC - minC + 1) * tileW + "px";
+  dragGhost.style.height = (maxR - minR + 1) * tileH + "px";
   dragGhost.style.pointerEvents = "none";
   dragGhost.style.zIndex = 9999;
   dragGhost.style.opacity = "0.92";
-  dragGhost.style.transform = "scale(1.05)";
-  dragGhost.style.boxShadow = "0 0 12px rgba(255,255,255,0.9)";
+  dragGhost.style.filter = "drop-shadow(0 0 8px rgba(255,255,255,0.85))";
+
+  dragGroup.forEach(index => {
+    const { r, c } = cellOf(index);
+    const clone = tiles[index].cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.left = (c - minC) * tileW + "px";
+    clone.style.top = (r - minR) * tileH + "px";
+    dragGhost.appendChild(clone);
+    tiles[index].style.opacity = "0.35";
+  });
+
   document.body.appendChild(dragGhost);
+  moveGhost(clientX, clientY);
+
+  hoverCellKey = (src.r) + "," + (src.c);
+  playSound("pick");
+  vibrate(20);
 }
 
 function onPointerMove(e) {
-  if (!dragGhost) return;
+  if (!dragGhost || e.pointerId !== dragPointerId) return;
   lastClientX = e.clientX;
   lastClientY = e.clientY;
   moveGhost(lastClientX, lastClientY);
+
+  // טיק קצר בכל מעבר לתא חדש
+  const cell = cellUnderGrabbedTile();
+  const key = cell ? cell.r + "," + cell.c : null;
+  if (key !== hoverCellKey) {
+    hoverCellKey = key;
+    if (key) vibrate(6);
+  }
 }
 
-function onPointerUp() {
-  if (!dragGhost || !dragSourceTile) {
-    removeGhost();
-    dragSourceTile = null;
+function onPointerUp(e) {
+  if (!dragGhost || e.pointerId !== dragPointerId) return;
+
+  lastClientX = e.clientX;
+  lastClientY = e.clientY;
+
+  const group = dragGroup;
+  const sourceIndex = tiles.indexOf(dragSourceTile);
+  const target = cellUnderGrabbedTile();
+
+  cancelDrag();
+
+  // שוחרר מחוץ ללוח או באותו מקום
+  if (!target || sourceIndex === -1) return;
+  const src = cellOf(sourceIndex);
+  const dr = target.r - src.r;
+  const dc = target.c - src.c;
+  if (dr === 0 && dc === 0) return;
+
+  const joinsBefore = countJoins();
+
+  if (!moveGroup(group, dr, dc)) {
+    // הקבוצה לא נכנסת שם (יוצאת מהלוח)
+    playSound("invalid");
+    vibrate([15, 40, 15]);
     return;
   }
 
-  const elem = document.elementFromPoint(lastClientX, lastClientY);
-  const targetTile = elem && elem.closest(".tile");
+  renderTiles();
+  moves++;
+  updateHud();
 
-  if (targetTile && targetTile !== dragSourceTile) {
-    swapTiles(dragSourceTile, targetTile);
-    renderTiles();
-    checkWin();
+  if (countJoins() > joinsBefore) {
+    playSound("snap");
+    vibrate(30);
+  } else {
+    playSound("drop");
+    vibrate(8);
   }
 
-  removeGhost();
-  dragSourceTile = null;
+  checkWin();
 }
 
-function onTouchMove(e) {
-  if (!dragGhost) return;
-  e.preventDefault();
+// התא בלוח שמתחת למרכז החלק שתפסנו (לא מתחת לאצבע - כך זה מרגיש טבעי יותר)
+function cellUnderGrabbedTile() {
+  const rect = puzzle.getBoundingClientRect();
+  const left = rect.left + puzzle.clientLeft;
+  const top = rect.top + puzzle.clientTop;
 
-  const touch = e.touches[0];
-  lastClientX = touch.clientX;
-  lastClientY = touch.clientY;
-  moveGhost(lastClientX, lastClientY);
+  const centerX = lastClientX - dragGrab.x + dragGrab.tileW / 2;
+  const centerY = lastClientY - dragGrab.y + dragGrab.tileH / 2;
+
+  const c = Math.floor((centerX - left) / dragGrab.tileW);
+  const r = Math.floor((centerY - top) / dragGrab.tileH);
+  return inBounds(r, c) ? { r, c } : null;
 }
 
-function onTouchEnd() {
-  onPointerUp();
+// מזיז קבוצה ב-(dr, dc). החלקים שהיו ביעד עוברים למקומות שהקבוצה פינתה.
+function moveGroup(group, dr, dc) {
+  const groupSet = new Set(group);
+  const destOf = (index) => {
+    const { r, c } = cellOf(index);
+    return inBounds(r + dr, c + dc) ? (r + dr) * cols + (c + dc) : -1;
+  };
+
+  const dests = group.map(destOf);
+  if (dests.includes(-1)) return false;
+  const destSet = new Set(dests);
+
+  const next = tiles.slice();
+  group.forEach((index, k) => { next[dests[k]] = tiles[index]; });
+
+  // חלק שהיה ביעד "נדחף" אחורה עד שהוא מגיע לתא שהתפנה
+  destSet.forEach(dest => {
+    if (groupSet.has(dest)) return;
+    let cell = dest;
+    do {
+      const { r, c } = cellOf(cell);
+      cell = (r - dr) * cols + (c - dc);
+    } while (destSet.has(cell));
+    next[cell] = tiles[dest];
+  });
+
+  tiles.splice(0, tiles.length, ...next);
+  return true;
 }
 
 function moveGhost(x, y) {
   if (!dragGhost) return;
-  const rect = dragGhost.getBoundingClientRect();
-  dragGhost.style.left = (x - rect.width / 2) + "px";
-  dragGhost.style.top = (y - rect.height / 2) + "px";
+  dragGhost.style.left = (x - dragGrab.ghostX) + "px";
+  dragGhost.style.top = (y - dragGrab.ghostY) + "px";
 }
 
 function removeGhost() {
@@ -265,11 +795,22 @@ function removeGhost() {
   dragGhost = null;
 }
 
+// מבטל גרירה פעילה בלי להחליף אריחים
+function cancelDrag() {
+  tiles.forEach(tile => { tile.style.opacity = ""; });
+  removeGhost();
+  dragSourceTile = null;
+  dragGroup = [];
+  dragGrab = null;
+  hoverCellKey = null;
+  dragPointerId = null;
+}
+
 // Global listeners
-document.addEventListener("mousemove", onPointerMove);
-document.addEventListener("mouseup", onPointerUp);
-document.addEventListener("touchmove", onTouchMove, { passive: false });
-document.addEventListener("touchend", onTouchEnd);
+document.addEventListener("pointermove", onPointerMove);
+document.addEventListener("pointerup", onPointerUp);
+document.addEventListener("pointercancel", cancelDrag);
+window.addEventListener("blur", cancelDrag);
 
 // =====================
 // Swap + Win
@@ -283,42 +824,99 @@ function swapTiles(tileA, tileB) {
 }
 
 function checkWin() {
-  let win = true;
+  if (!isSolved()) return;
 
-  for (let i = 0; i < tiles.length; i++) {
-    const correctIndex = parseInt(tiles[i].dataset.correctIndex, 10);
-    if (correctIndex !== i) {
-      win = false;
-      break;
-    }
-  }
+  gameOver = true;
 
-  if (win && winMessage) {
-    gameOver = true;
+  recordResult(currentLevelIndex, currentDifficulty);
 
-    tiles.forEach(tile => {
-      tile.style.border = "none";
-      tile.style.boxShadow = "none";
-      tile.style.cursor = "default";
-    });
+  tiles.forEach(tile => {
+    tile.style.boxShadow = "none";
+    tile.style.cursor = "default";
+  });
 
-    winMessage.style.display = "block";
+  playSound("win");
+  vibrate([40, 60, 40, 60, 120]);
 
-    if (nextLevelBtn) {
-      if (currentLevelIndex < levels.length - 1) {
-        nextLevelBtn.style.display = "inline-block";
-      } else {
-        nextLevelBtn.style.display = "none";
-      }
-    }
+  clearTimeout(winTimer);
+  winTimer = setTimeout(openWinScreen, WIN_SCREEN_DELAY);
+}
+
+// =====================
+// Win Screen
+// =====================
+function isLastLevel() {
+  return currentLevelIndex >= levels.length - 1;
+}
+
+// הרמה הבאה באותו שלב (אם יש), אחרי שהנוכחית נפתרה
+function nextDifficulty() {
+  return currentDifficulty < DIFFICULTIES.length ? currentDifficulty + 1 : 0;
+}
+
+function openWinScreen() {
+  const stars = getStars(currentLevelIndex);
+  const harder = nextDifficulty();
+
+  winTitle.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
+  winStars.innerHTML = starsHtml(stars);
+  winStats.innerHTML =
+    `<span>${DIFFICULTIES[currentDifficulty - 1].name.toUpperCase()}</span>` +
+    `<span>MOVES <b>${moves}</b></span>`;
+  winNextBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+
+  // כפתור לרמה הקשה יותר (מופיע רק אם יש רמה הבאה)
+  winHarderBtn.classList.toggle("hidden", !harder);
+  if (harder) winHarderBtn.textContent = `▲ ${DIFFICULTIES[harder - 1].name}`;
+
+  winModal.classList.remove("hidden");
+
+  // הכוכבים "קופצים" אחד אחרי השני, עם צליל ורטט
+  winStarTimers.forEach(clearTimeout);
+  winStarTimers = [];
+  for (let i = 0; i < stars; i++) {
+    winStarTimers.push(setTimeout(() => {
+      playSound("star", i);
+      vibrate(12);
+    }, 350 + i * 300));
   }
 }
 
-nextLevelBtn?.addEventListener("click", () => {
-  if (currentLevelIndex < levels.length - 1) {
-    loadLevel(currentLevelIndex + 1);
+function closeWinScreen() {
+  clearTimeout(winTimer);
+  winStarTimers.forEach(clearTimeout);
+  winStarTimers = [];
+  winModal?.classList.add("hidden");
+}
+
+function goNext() {
+  if (isLastLevel()) {
+    showLevels();
+  } else {
+    loadLevel(currentLevelIndex + 1, 1);
+  }
+}
+
+winNextBtn?.addEventListener("click", goNext);
+winReplayBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, currentDifficulty));
+winHarderBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, nextDifficulty()));
+winLevelsBtn?.addEventListener("click", showLevels);
+
+// לחיצה על הרקע סוגרת את המסך כדי לראות את התמונה - נשאר כפתור להמשך מתחת ללוח
+winModal?.addEventListener("click", (e) => {
+  if (e.target !== winModal) return;
+  closeWinScreen();
+  if (winMessage) {
+    winMessage.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
+    winMessage.style.display = "block";
+  }
+  if (nextLevelBtn) {
+    nextLevelBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+    nextLevelBtn.style.display = "inline-block";
   }
 });
+
+nextLevelBtn?.addEventListener("click", goNext);
 
 // =====================
 // Start state
