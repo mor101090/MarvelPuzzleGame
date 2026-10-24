@@ -40,17 +40,21 @@ const SOUNDS = {
     tone(ctx, 660, 0, 0.08, { type: "triangle", gain: 0.14 });
     tone(ctx, 990, 0.07, 0.14, { type: "triangle", gain: 0.14 });
   },
+  star:    (ctx, i = 0) => {
+    tone(ctx, 600 + i * 160, 0, 0.2, { type: "triangle", gain: 0.14 });
+    tone(ctx, 1200 + i * 320, 0.02, 0.14, { type: "sine", gain: 0.06 });
+  },
   invalid: (ctx) => tone(ctx, 180, 0, 0.16, { type: "sawtooth", gain: 0.06, slideTo: 120 }),
   win:     (ctx) => {
     [523, 659, 784, 1047].forEach((f, i) => tone(ctx, f, i * 0.11, 0.22, { type: "triangle", gain: 0.14 }));
   }
 };
 
-function playSound(name) {
+function playSound(name, arg) {
   if (!settings.sound) return;
   const ctx = getAudioCtx();
   if (!ctx || !SOUNDS[name]) return;
-  SOUNDS[name](ctx);
+  SOUNDS[name](ctx, arg);
 }
 
 // =====================

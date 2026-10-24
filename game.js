@@ -16,6 +16,13 @@ const levelsBackBtn = document.getElementById("levelsBackBtn");
 const levelLabel = document.getElementById("levelLabel");
 const movesCount = document.getElementById("movesCount");
 const hudStars = document.getElementById("hudStars");
+const winModal = document.getElementById("winModal");
+const winTitle = document.getElementById("winTitle");
+const winStars = document.getElementById("winStars");
+const winStats = document.getElementById("winStats");
+const winNextBtn = document.getElementById("winNextBtn");
+const winReplayBtn = document.getElementById("winReplayBtn");
+const winLevelsBtn = document.getElementById("winLevelsBtn");
 
 // =====================
 // Levels
@@ -67,6 +74,11 @@ let started = false;
 
 // מונע מטעינת תמונה ישנה לדרוס שלב חדש (למשל לחיצה מהירה על NEXT LEVEL)
 let loadToken = 0;
+
+// השהיה קצרה אחרי הניצחון כדי ליהנות מהתמונה המושלמת לפני מסך הניצחון
+const WIN_SCREEN_DELAY = 900;
+let winTimer = null;
+let winStarTimers = [];
 
 // =====================
 // Progress (נשמר במכשיר)
@@ -169,6 +181,7 @@ function nextPlayableLevel() {
 // =====================
 function showScreen(screen) {
   cancelDrag();
+  closeWinScreen();
   [homeScreen, levelScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
@@ -290,6 +303,7 @@ function loadLevel(index) {
   gameOver = false;
   moves = 0;
   updateHud();
+  closeWinScreen();
   cancelDrag();
   tiles.length = 0;
   puzzle.innerHTML = "";
@@ -698,32 +712,86 @@ function checkWin() {
   gameOver = true;
 
   const stars = starsForMoves(currentLevelIndex, moves);
-  recordResult(currentLevelIndex, moves, stars);
+  const isNewBest = recordResult(currentLevelIndex, moves, stars);
 
   tiles.forEach(tile => {
     tile.style.boxShadow = "none";
     tile.style.cursor = "default";
   });
 
-  if (winMessage) winMessage.style.display = "block";
-
   playSound("win");
   vibrate([40, 60, 40, 60, 120]);
 
-  if (nextLevelBtn) {
-    const isLastLevel = currentLevelIndex >= levels.length - 1;
-    nextLevelBtn.textContent = isLastLevel ? "PLAY AGAIN" : "NEXT LEVEL";
-    nextLevelBtn.style.display = "inline-block";
+  clearTimeout(winTimer);
+  winTimer = setTimeout(() => openWinScreen(stars, isNewBest), WIN_SCREEN_DELAY);
+}
+
+// =====================
+// Win Screen
+// =====================
+function isLastLevel() {
+  return currentLevelIndex >= levels.length - 1;
+}
+
+function openWinScreen(stars, isNewBest) {
+  const best = getBest(currentLevelIndex);
+
+  winTitle.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
+  winStars.innerHTML = starsHtml(stars);
+  winStats.innerHTML =
+    `<span>MOVES <b>${moves}</b></span>` +
+    (isNewBest
+      ? `<span class="new-best">NEW BEST!</span>`
+      : `<span>BEST <b>${best.moves}</b></span>`);
+  winNextBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+
+  winModal.classList.remove("hidden");
+
+  // הכוכבים "קופצים" אחד אחרי השני, עם צליל ורטט
+  winStarTimers.forEach(clearTimeout);
+  winStarTimers = [];
+  for (let i = 0; i < stars; i++) {
+    winStarTimers.push(setTimeout(() => {
+      playSound("star", i);
+      vibrate(12);
+    }, 350 + i * 300));
   }
 }
 
-nextLevelBtn?.addEventListener("click", () => {
-  if (currentLevelIndex < levels.length - 1) {
-    loadLevel(currentLevelIndex + 1);
+function closeWinScreen() {
+  clearTimeout(winTimer);
+  winStarTimers.forEach(clearTimeout);
+  winStarTimers = [];
+  winModal?.classList.add("hidden");
+}
+
+function goNext() {
+  if (isLastLevel()) {
+    showLevels();
   } else {
-    loadLevel(0); // סיימת את כל השלבים - מתחילים מחדש
+    loadLevel(currentLevelIndex + 1);
+  }
+}
+
+winNextBtn?.addEventListener("click", goNext);
+winReplayBtn?.addEventListener("click", () => loadLevel(currentLevelIndex));
+winLevelsBtn?.addEventListener("click", showLevels);
+
+// לחיצה על הרקע סוגרת את המסך כדי לראות את התמונה - נשאר כפתור להמשך מתחת ללוח
+winModal?.addEventListener("click", (e) => {
+  if (e.target !== winModal) return;
+  closeWinScreen();
+  if (winMessage) {
+    winMessage.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
+    winMessage.style.display = "block";
+  }
+  if (nextLevelBtn) {
+    nextLevelBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+    nextLevelBtn.style.display = "inline-block";
   }
 });
+
+nextLevelBtn?.addEventListener("click", goNext);
 
 // =====================
 // Start state

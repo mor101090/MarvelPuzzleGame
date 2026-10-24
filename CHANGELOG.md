@@ -4,6 +4,18 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.7.0] (`@@0.7.0`) - Win screen
+### Added
+- **Win screen** appears shortly after the last piece lands, so you first see the
+  finished picture. It shows the earned stars (popping in one by one with a sound
+  and vibration), your moves, and your best or **NEW BEST!**.
+- Buttons: **Next Level**, **Replay** (new shuffle of the same level) and **Levels**.
+- Tapping outside the win screen closes it to look at the picture. A button to
+  continue stays under the board.
+### Changed
+- After the last level the button is **Levels** instead of restarting the game.
+- Leaving the level before the win screen shows never makes it pop up later.
+
 ## [0.6.0] (`@@0.6.0`) - Moves and stars
 ### Added
 - **Move counter** in the game screen. Every piece or group move counts.

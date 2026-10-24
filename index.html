@@ -84,6 +84,21 @@
     </div>
   </div>
 
+  <!-- WIN SCREEN -->
+  <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="modal-card win-card">
+      <h2 id="winTitle">LEVEL 1 COMPLETE</h2>
+      <div id="winStars" class="stars win-stars" aria-hidden="true"></div>
+      <p id="winStats" class="win-stats"></p>
+
+      <button id="winNextBtn" class="next" type="button">NEXT LEVEL</button>
+      <div class="win-row">
+        <button id="winReplayBtn" class="text-btn" type="button">↻ Replay</button>
+        <button id="winLevelsBtn" class="text-btn" type="button">Levels</button>
+      </div>
+    </div>
+  </div>
+
   <script src="settings.js"></script>
   <script src="sound.js"></script>
   <script src="game.js"></script>
