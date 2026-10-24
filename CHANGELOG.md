@@ -4,6 +4,15 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.9.0] (`@@0.9.0`) - Preview
+### Added
+- **Preview** button between the move counter and the stars. It shows the full
+  picture over the board for 3 seconds. Tap the button or the picture to hide it
+  sooner. Starting a drag also hides it.
+- Using Preview does not cost stars.
+### Changed
+- On very narrow phones (320px) the move counter and stars are slightly smaller.
+
 ## [0.8.0] (`6180a9d`) - Gallery
 ### Added
 - **Gallery** screen, opened from the **Gallery** button on the Choose Level screen.

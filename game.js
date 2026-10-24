@@ -24,6 +24,7 @@ const galleryBackBtn = document.getElementById("galleryBackBtn");
 const viewerModal = document.getElementById("viewerModal");
 const viewerImg = document.getElementById("viewerImg");
 const viewerCaption = document.getElementById("viewerCaption");
+const previewBtn = document.getElementById("previewBtn");
 const winModal = document.getElementById("winModal");
 const winTitle = document.getElementById("winTitle");
 const winStars = document.getElementById("winStars");
@@ -191,6 +192,7 @@ function showScreen(screen) {
   cancelDrag();
   closeWinScreen();
   closeViewer();
+  closePreview();
   [homeScreen, levelScreen, galleryScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
@@ -387,6 +389,42 @@ document.addEventListener("keydown", (e) => {
 });
 
 // =====================
+// Preview (מציץ בתמונה המלאה - בלי עונש על כוכבים)
+// =====================
+const PREVIEW_MS = 3000;
+let previewEl = null;
+let previewTimer = null;
+
+function openPreview() {
+  if (previewEl || !tiles.length || gameOver) return;
+
+  cancelDrag();
+  const rect = puzzle.getBoundingClientRect();
+
+  previewEl = document.createElement("div");
+  previewEl.className = "preview-overlay";
+  previewEl.style.left = rect.left + puzzle.clientLeft + "px";
+  previewEl.style.top = rect.top + puzzle.clientTop + "px";
+  previewEl.style.width = puzzleWidth + "px";
+  previewEl.style.height = puzzleHeight + "px";
+  previewEl.style.backgroundImage = `url('${currentImageSrc}')`;
+  previewEl.addEventListener("click", closePreview);
+  document.body.appendChild(previewEl);
+
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(closePreview, PREVIEW_MS);
+}
+
+function closePreview() {
+  clearTimeout(previewTimer);
+  previewEl?.remove();
+  previewEl = null;
+}
+
+previewBtn?.addEventListener("click", () => (previewEl ? closePreview() : openPreview()));
+window.addEventListener("resize", closePreview);
+
+// =====================
 // Level Loader
 // =====================
 function loadLevel(index) {
@@ -399,6 +437,7 @@ function loadLevel(index) {
   moves = 0;
   updateHud();
   closeWinScreen();
+  closePreview();
   cancelDrag();
   tiles.length = 0;
   puzzle.innerHTML = "";
@@ -596,6 +635,7 @@ function updateTileEdges() {
 // =====================
 function startDrag(tile, pointerId, clientX, clientY) {
   if (gameOver) return;
+  closePreview();
   if (dragGhost) return; // כבר גוררים (למשל אצבע שנייה)
 
   const sourceIndex = tiles.indexOf(tile);
@@ -805,6 +845,7 @@ function checkWin() {
   if (!isSolved()) return;
 
   gameOver = true;
+  closePreview();
 
   const stars = starsForMoves(currentLevelIndex, moves);
   const isNewBest = recordResult(currentLevelIndex, moves, stars);
