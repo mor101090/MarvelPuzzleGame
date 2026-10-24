@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.8.0] (`@@0.8.0`) - Gallery
+## [0.8.0] (`6180a9d`) - Gallery
 ### Added
 - **Gallery** screen, opened from the **Gallery** button on the Choose Level screen.
   Every picture you solve is saved there. Unsolved pictures show a padlock.
@@ -12,7 +12,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 - Counter of collected pictures (`1 / 2 PICTURES`).
 - New levels appear in the gallery automatically.
 
-## [0.7.0] (`@@0.7.0`) - Win screen
+## [0.7.0] (`02a8926`) - Win screen
 ### Added
 - **Win screen** appears shortly after the last piece lands, so you first see the
   finished picture. It shows the earned stars (popping in one by one with a sound
@@ -24,7 +24,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 - After the last level the button is **Levels** instead of restarting the game.
 - Leaving the level before the win screen shows never makes it pop up later.
 
-## [0.6.0] (`@@0.6.0`) - Moves and stars
+## [0.6.0] (`27b8fc7`) - Moves and stars
 ### Added
 - **Move counter** in the game screen. Every piece or group move counts.
 - **Star rating** (1 to 3 stars) based on the number of moves. The stars at the
