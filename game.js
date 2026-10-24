@@ -40,6 +40,7 @@ let dragGroup = [];        // מיקומים (אינדקסים) של כל החל
 let dragGhost = null;
 let dragPointerId = null;
 let dragGrab = null;       // איפה בתוך החלק תפסנו + גודל חלק
+let hoverCellKey = null;   // התא שמעליו הגרירה נמצאת (לרטט "טיק" במעבר בין תאים)
 let lastClientX = 0;
 let lastClientY = 0;
 
@@ -351,8 +352,9 @@ function startDrag(tile, pointerId, clientX, clientY) {
   document.body.appendChild(dragGhost);
   moveGhost(clientX, clientY);
 
+  hoverCellKey = (src.r) + "," + (src.c);
   playSound("pick");
-  vibrate(10);
+  vibrate(20);
 }
 
 function onPointerMove(e) {
@@ -360,6 +362,14 @@ function onPointerMove(e) {
   lastClientX = e.clientX;
   lastClientY = e.clientY;
   moveGhost(lastClientX, lastClientY);
+
+  // טיק קצר בכל מעבר לתא חדש
+  const cell = cellUnderGrabbedTile();
+  const key = cell ? cell.r + "," + cell.c : null;
+  if (key !== hoverCellKey) {
+    hoverCellKey = key;
+    if (key) vibrate(6);
+  }
 }
 
 function onPointerUp(e) {
@@ -467,6 +477,7 @@ function cancelDrag() {
   dragSourceTile = null;
   dragGroup = [];
   dragGrab = null;
+  hoverCellKey = null;
   dragPointerId = null;
 }
 

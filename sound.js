@@ -54,18 +54,48 @@ function playSound(name) {
 }
 
 // =====================
-// Vibration (לא נתמך ב-iPhone Safari - שם פשוט לא יקרה כלום)
+// Vibration
 // =====================
-function vibrate(pattern) {
-  if (!settings.vibration) return;
+// אנדרואיד: navigator.vibrate. אייפון (iOS 18+): אין vibrate, אבל החלפת מתג
+// "switch" נותנת תחושת רטט קצרה - משתמשים בזה כגיבוי.
+const canVibrate = typeof navigator.vibrate === "function";
+let hapticLabel = null;
+
+function iosHapticTick() {
   try {
-    navigator.vibrate?.(pattern);
+    if (!hapticLabel) {
+      hapticLabel = document.createElement("label");
+      hapticLabel.setAttribute("aria-hidden", "true");
+      hapticLabel.style.cssText = "position:fixed;left:-100px;top:-100px;opacity:0;pointer-events:none;";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.setAttribute("switch", "");
+      hapticLabel.appendChild(input);
+      document.body.appendChild(hapticLabel);
+    }
+    hapticLabel.click();
   } catch {
     // לא נתמך
   }
 }
 
+function vibrate(pattern) {
+  if (!settings.vibration) return;
+  if (canVibrate) {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // נחסם
+    }
+    return;
+  }
+  iosHapticTick();
+}
+
 // צליל לחיצה לכל כפתור במשחק
 document.addEventListener("click", (e) => {
-  if (e.target.closest("button")) playSound("click");
+  if (e.target.closest("button")) {
+    playSound("click");
+    vibrate(15);
+  }
 });
