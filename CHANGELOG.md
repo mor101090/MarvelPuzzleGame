@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.5.0] - Level select and progress
+## [0.5.0] (`f295bb4`) - Level select and progress
 ### Added
 - **Choose Level** screen with big level cards, in the style of the home screen.
 - Levels are grouped by category. First category: **Easy**.
@@ -18,7 +18,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 - The game screen uses the same grey comic background as the home screen.
 - Win message is bigger and outlined to stay readable on the new background.
 
-## [0.4.0] - Vibration everywhere
+## [0.4.0] (`ff9cc14`) - Vibration everywhere
 ### Added
 - Vibration on every button press.
 - A short "tick" vibration each time a dragged piece passes over a new cell.
@@ -26,7 +26,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 ### Changed
 - Stronger vibration when picking up a piece.
 
-## [0.3.0] - Group dragging, settings and sound
+## [0.3.0] (`5d23799`) - Group dragging, settings and sound
 ### Added
 - **Group dragging:** pieces that sit correctly next to each other join into a
   group. The red line between them disappears and dragging one moves them all.
@@ -38,7 +38,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 - **Vibration** on pick up, drop, snap, invalid move and win.
 - Pieces now drop by where the dragged piece lands, not where the finger is.
 
-## [0.2.0] - Bug fixes
+## [0.2.0] (`0ca254c`) - Bug fixes
 ### Fixed
 - Board border squeezed the pieces, so the image was misaligned and the last
   row overflowed the board.
@@ -55,7 +55,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 - The dragged piece is centered under the pointer, the original is dimmed.
 - Game board is aligned to the top, under the Back button.
 
-## [0.1.0] - Home screen
+## [0.1.0] (`a648ea5`) - Home screen
 ### Added
 - Basic picture puzzle: drag and swap pieces, win message, next level button.
 - Two levels: 3x3 and 4x4.
