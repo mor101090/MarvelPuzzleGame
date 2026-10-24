@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.15.0] (`@@0.15.0`) - Difficulty levels instead of move stars
+## [0.15.0] (`c119549`) - Difficulty levels instead of move stars
 ### Added
 - Every level has **Easy**, **Medium** and **Hard**. Medium has twice the pieces
   of Easy and Hard has twice the pieces of Medium (for example 9, 18, 36 pieces,
