@@ -38,10 +38,20 @@ const categories = [
   { id: "easy", name: "Easy" }
 ];
 
+// הסדר כאן הוא סדר השלבים (ממוין לפי שם הקובץ). id קבוע - ההתקדמות נשמרת לפיו,
+// כך שאפשר להוסיף או לסדר שלבים בלי לאבד התקדמות.
+// thumb = גרסה קטנה לכרטיסים במסך בחירת השלב (נטענת מהר)
 const levels = [
-  { image: "level3.jpeg", grid: 3, category: "easy" },
-  { image: "level4.jpg",  grid: 4, category: "easy" } // אם הקובץ שלך באמת level4.JPG תשנה כאן ל-"level4.JPG"
-];
+  { id: "1",      grid: 3, category: "easy" },
+  { id: "2",      grid: 3, category: "easy" },
+  { id: "3",      grid: 4, category: "easy" },
+  { id: "level3", grid: 3, category: "easy" },
+  { id: "level4", grid: 4, category: "easy" }
+].map(level => ({
+  ...level,
+  image: `assets/levels/${level.id}.webp`,
+  thumb: `assets/levels/thumbs/${level.id}.webp`
+}));
 
 let currentLevelIndex = 0;
 let currentImageSrc = levels[0].image;
@@ -90,18 +100,24 @@ let winStarTimers = [];
 // =====================
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
-// completed = אינדקסים של שלבים שנפתרו
-// best = התוצאה הטובה ביותר לכל שלב: { "0": { moves: 12, stars: 3 } }
+// completed = id של שלבים שנפתרו
+// best = התוצאה הטובה ביותר לכל שלב: { "level3": { moves: 12, stars: 3 } }
+// שני השלבים הראשונים בגרסאות הישנות נשמרו לפי מספר - מתרגמים אותם ל-id
+const LEGACY_IDS = ["level3", "level4"];
+
 const progress = { completed: [], best: {}, ...loadProgress() };
 
 function loadProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
     if (!Array.isArray(saved?.completed)) return {};
-    return {
-      completed: saved.completed,
-      best: saved.best && typeof saved.best === "object" ? saved.best : {}
-    };
+    // שמירה ישנה (בלי version) נשמרה לפי אינדקס - מתרגמים ל-id
+    const legacy = !saved.version;
+    const toId = (key) => (legacy && LEGACY_IDS[key]) || String(key);
+    const best = {};
+    Object.entries(saved.best && typeof saved.best === "object" ? saved.best : {})
+      .forEach(([key, value]) => { best[toId(key)] = value; });
+    return { completed: saved.completed.map(toId), best };
   } catch {
     return {};
   }
@@ -109,28 +125,28 @@ function loadProgress() {
 
 function saveProgress() {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 2, ...progress }));
   } catch {
     // אחסון חסום - ההתקדמות תחזיק עד רענון
   }
 }
 
 function isCompleted(index) {
-  return progress.completed.includes(index);
+  return progress.completed.includes(levels[index].id);
 }
 
 function getBest(index) {
-  return progress.best[index] || null;
+  return progress.best[levels[index].id] || null;
 }
 
 // שומר תוצאה ומחזיר true אם זה שיא חדש
 function recordResult(index, moves, stars) {
-  if (!isCompleted(index)) progress.completed.push(index);
+  if (!isCompleted(index)) progress.completed.push(levels[index].id);
 
   const prev = getBest(index);
   const isNewBest = !prev || moves < prev.moves;
   if (isNewBest) {
-    progress.best[index] = { moves, stars };
+    progress.best[levels[index].id] = { moves, stars };
   }
   saveProgress();
   return isNewBest;
@@ -170,9 +186,9 @@ function updateHud() {
   if (hudStars) hudStars.innerHTML = starsHtml(starsForMoves(currentLevelIndex, moves));
 }
 
-// שלב נפתח אם הוא הראשון, או שהקודם לו נפתר
+// שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
 function isUnlocked(index) {
-  return index === 0 || isCompleted(index - 1);
+  return index === 0 || isCompleted(index) || isCompleted(index - 1);
 }
 
 // השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
@@ -273,7 +289,7 @@ function renderLevelSelect() {
 
       if (solved) {
         // שלב שנפתר: התמונה עצמה, עם מספר השלב והכוכבים
-        card.style.backgroundImage = `url('${level.image}')`;
+        card.style.backgroundImage = `url('${level.thumb}')`;
         card.innerHTML =
           `<span class="level-tag">LEVEL ${index + 1}` +
           (best ? `<span class="stars">${starsHtml(best.stars)}</span>` : "") +
@@ -283,7 +299,7 @@ function renderLevelSelect() {
       } else {
         // שלב פתוח שעוד לא נפתר: התמונה מטושטשת וסימן play
         card.innerHTML =
-          `<span class="level-teaser" style="background-image:url('${level.image}')"></span>` +
+          `<span class="level-teaser" style="background-image:url('${level.thumb}')"></span>` +
           PLAY_SVG +
           `<span class="level-tag">LEVEL ${index + 1}</span>`;
       }
@@ -404,6 +420,7 @@ function loadLevel(index) {
   if (nextLevelBtn) nextLevelBtn.style.display = "none";
 
   const token = ++loadToken;
+  if (levels[index + 1]) new Image().src = levels[index + 1].image; // מטעינים מראש את השלב הבא
   const img = new Image();
 
   img.onload = () => {

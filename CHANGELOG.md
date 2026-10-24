@@ -4,6 +4,21 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.13.0] (`@@0.13.0`) - Three new levels and faster images
+### Added
+- Three new levels: Wolverine, Civil War and Iron Man. There are now 5 levels,
+  ordered by file name: `1`, `2`, `3`, `level3`, `level4`.
+- Small thumbnails (480px) for the Choose Level cards, so the menu loads fast.
+- The next level's picture is loaded in the background while you play.
+### Changed
+- All pictures are now **WebP**, at most 1200px on the long side. Total size went
+  from 1.4 MB to 0.7 MB for the full pictures.
+- Pictures moved to `assets/levels/` (`level3.jpeg` and `level4.jpg` are gone from
+  the project root).
+- Progress is saved per level id instead of position, so adding or reordering
+  levels never mixes up saved stars. Old saves are converted automatically.
+- A solved level always stays open, even if an earlier level is not solved.
+
 ## [0.12.0] (`c4bf4ac`) - Choose Level uses the gallery design
 ### Changed
 - Choose Level no longer uses red number cards. Every level is now a picture card
