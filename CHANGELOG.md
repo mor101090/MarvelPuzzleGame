@@ -4,6 +4,26 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.16.0] (`@@0.16.0`) - Landscape and zoom
+### Added
+- **Landscape:** the game adapts when the phone is turned sideways. The board
+  now fills the free space on the screen in both directions, so wide pictures
+  get much bigger pieces when the phone is horizontal.
+- Landscape layouts for every screen: home (logo left, buttons right), Choose
+  Level (4 cards per row), the picture view (picture left, difficulties right)
+  and a lower win screen.
+- **Zoom on the board:** pinch with two fingers to zoom and move around, or use
+  the `−` / `+` buttons above the board (tap the `1×` label to reset). On a
+  computer: Ctrl + mouse wheel or trackpad pinch. Up to 3×.
+- While zoomed in, dragging a piece to the edge of the board scrolls the board.
+### Changed
+- The board is no longer limited to 360px. In portrait it uses the full width,
+  so pieces are bigger on phones too.
+- Zoom resets to 1× on a new level and when the puzzle is solved, so you see the
+  whole picture.
+- One finger drags a piece, two fingers zoom. A second finger cancels a drag in
+  progress instead of moving a piece.
+
 ## [0.15.1] (`62db700`) - Rollback tool
 ### Added
 - `tools/rollback.py`: restores the game to any earlier version in one new commit,

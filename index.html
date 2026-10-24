@@ -50,10 +50,18 @@
     <div id="puzzleWrap">
       <div class="hud">
         <span class="hud-moves">MOVES <b id="movesCount">0</b></span>
+        <div class="zoom-ctrl" role="group" aria-label="Zoom">
+          <button id="zoomOutBtn" class="text-btn zoom-btn" type="button" aria-label="Zoom out">−</button>
+          <button id="zoomResetBtn" class="zoom-level" type="button" aria-label="Reset zoom">1×</button>
+          <button id="zoomInBtn" class="text-btn zoom-btn" type="button" aria-label="Zoom in">+</button>
+        </div>
         <span id="hudStars" class="stars hud-stars" aria-label="Difficulty"></span>
       </div>
 
-      <div id="puzzle"></div>
+      <!-- חלון הלוח: גולל כשעושים זום -->
+      <div id="boardViewport">
+        <div id="puzzle"></div>
+      </div>
 
       <div id="winMessage" class="win" style="display:none;">YOU WON!</div>
       <button id="nextLevelBtn" class="next" style="display:none;" type="button">NEXT LEVEL</button>
