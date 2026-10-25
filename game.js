@@ -134,18 +134,16 @@ let winStarTimers = [];
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
 // level = { "9": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
-// version 4: id = מספר השלב לפי שם הקובץ (1..30).
-// שמירות ישנות: version 1 לפי אינדקס, 2 לפי id עם כוכבי מהלכים, 3 לפי id של הסדר הקודם
+// שלב N = assets/levels/N.webp. השלבים הקיימים נשארים במקומם והחדשים נוספים אחריהם.
+// שמירות ישנות: version 1 לפי אינדקס, 2 לפי id עם כוכבי מהלכים, 3 ו-5 לפי מספר שלב
+// (אותו מספור), ו-4 לפי שם קובץ התמונה (נוצר לרגע בגרסה 0.21.0 ובוטל).
 const LEGACY_IDS = ["9", "10"];                    // השלבים הראשונים בשמירה לפי אינדקס
 const RENAMED_IDS = { level3: "9", level4: "10" }; // שלבים ששינינו להם שם (לפני version 3)
 const renameId = (id) => RENAMED_IDS[id] || id;
 
-// הסדר של version 3 -> מספר השלב החדש (לפי שם הקובץ המקורי של התמונה)
-const V3_TO_V4 = {
-  "1": "1", "2": "5", "3": "2", "4": "14", "5": "11",
-  "6": "10", "7": "26", "8": "19", "9": "3", "10": "4"
-};
-const toCurrentId = (id) => V3_TO_V4[renameId(id)] || renameId(id);
+// שם קובץ התמונה המקורי של כל שלב (שלב N = ORDER[N-1]) - להמרת שמירות version 4
+const V4_ORDER = [1, 5, 2, 14, 11, 10, 26, 19, 3, 4, 6, 7, 8, 9, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30];
+const fromV4Id = (id) => String(V4_ORDER.indexOf(Number(id)) + 1);
 
 const progress = { level: {}, ...loadProgress() };
 
@@ -155,14 +153,12 @@ function loadProgress() {
     if (!saved) return {};
 
     const level = {};
-    const add = (id, stars) => { level[id] = Math.max(level[id] || 0, stars); };
+    const add = (id, stars) => { if (id !== "0") level[id] = Math.max(level[id] || 0, stars); };
 
-    if (saved.version === 4 && saved.level && typeof saved.level === "object") {
-      return { level: saved.level };
-    }
-
-    if (saved.version === 3 && saved.level && typeof saved.level === "object") {
-      Object.entries(saved.level).forEach(([id, stars]) => add(toCurrentId(id), stars));
+    if (saved.level && typeof saved.level === "object" && [3, 4, 5].includes(saved.version)) {
+      Object.entries(saved.level).forEach(([id, stars]) => {
+        add(saved.version === 4 ? fromV4Id(id) : renameId(id), stars);
+      });
       return { level };
     }
 
@@ -170,7 +166,7 @@ function loadProgress() {
     if (Array.isArray(saved.completed)) {
       const legacy = !saved.version;
       saved.completed.forEach(key => {
-        add(toCurrentId((legacy && LEGACY_IDS[key]) || String(key)), 1);
+        add(renameId((legacy && LEGACY_IDS[key]) || String(key)), 1);
       });
       return { level };
     }
@@ -182,7 +178,7 @@ function loadProgress() {
 
 function saveProgress() {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 4, ...progress }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 5, ...progress }));
   } catch {
     // אחסון חסום - ההתקדמות תחזיק עד רענון
   }
