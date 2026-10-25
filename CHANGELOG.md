@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.21.1] (`@@0.21.1`) - Existing levels keep their place
+## [0.21.1] (`7a97604`) - Existing levels keep their place
 ### Fixed
 - **Progress looked erased after 0.21.0.** That version reordered the 10 existing
   levels by file name, so the levels you had solved moved to places like 10, 11,
