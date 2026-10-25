@@ -4,6 +4,24 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.21.0] (`8bb8d80`) - 30 levels
+### Added
+- **20 new levels**, from the full set of 30 pictures (`level1` to `level30`).
+  Levels 11-20 are the **Hero** group (Easy 4x4 = 16 pieces, Medium 32, Hard 64)
+  and levels 21-30 are the **Avenger** group (Easy 5x5 = 25, Medium 50, Hard 100).
+  Legend and Cosmic are still locked as Coming soon.
+### Changed
+- **Level order now follows the file names**, `level1` to `level30`. The 10
+  existing levels moved to the place their file name says (for example the
+  Civil War picture was level 2 and is now level 10). Pictures that were already
+  in the game were not added twice.
+- Saved stars follow their pictures: saves are converted to the new numbering
+  automatically (checked against all older save formats).
+- The pictures are now named by number, `assets/levels/1.webp` to `30.webp`,
+  all converted to WebP with thumbnails (total 4 MB).
+- `tools/add_level.py` takes the level number, and adding a level means raising
+  `LEVEL_COUNT` in `game.js`.
+
 ## [0.20.0] (`64e49e7`) - Level order and all groups
 ### Changed
 - Levels are now numbered by file name, in order from 1 to 10. The last two

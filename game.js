@@ -51,28 +51,19 @@ const LEVELS_PER_GROUP = 10;
 const FIRST_GRID = 3;
 const GROUP_NAMES = ["Rookie", "Hero", "Avenger", "Legend", "Cosmic"];
 
-// הסדר כאן הוא סדר השלבים (ממוין לפי שם הקובץ). id קבוע - ההתקדמות נשמרת לפיו,
-// כך שאפשר להוסיף או לסדר שלבים בלי לאבד התקדמות.
+// שלב N = הקובץ assets/levels/N.webp (סדר השלבים הוא סדר המספרים בשם הקובץ).
+// כדי להוסיף שלבים: tools/add_level.py ואז מעלים את LEVEL_COUNT.
 // thumb = גרסה קטנה לכרטיסים במסך בחירת השלב (נטענת מהר)
-const levels = [
-  { id: "1" },
-  { id: "2" },
-  { id: "3" },
-  { id: "4" },
-  { id: "5" },
-  { id: "6" },
-  { id: "7" },
-  { id: "8" },
-  { id: "9" },
-  { id: "10" }
-].map((level, index) => {
+const LEVEL_COUNT = 30;
+const levels = Array.from({ length: LEVEL_COUNT }, (_, index) => {
+  const id = String(index + 1);
   const group = Math.floor(index / LEVELS_PER_GROUP);
   return {
-    ...level,
+    id,
     grid: FIRST_GRID + group,
     category: group,
-    image: `assets/levels/${level.id}.webp`,
-    thumb: `assets/levels/thumbs/${level.id}.webp`
+    image: `assets/levels/${id}.webp`,
+    thumb: `assets/levels/thumbs/${id}.webp`
   };
 });
 
@@ -143,10 +134,18 @@ let winStarTimers = [];
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
 // level = { "9": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
-// שמירות ישנות: version 1 נשמרו לפי אינדקס, version 2 לפי id עם כוכבי מהלכים
-const LEGACY_IDS = ["9", "10"];                 // השלבים הראשונים בשמירה לפי אינדקס
-const RENAMED_IDS = { level3: "9", level4: "10" }; // שלבים ששינינו להם שם
+// version 4: id = מספר השלב לפי שם הקובץ (1..30).
+// שמירות ישנות: version 1 לפי אינדקס, 2 לפי id עם כוכבי מהלכים, 3 לפי id של הסדר הקודם
+const LEGACY_IDS = ["9", "10"];                    // השלבים הראשונים בשמירה לפי אינדקס
+const RENAMED_IDS = { level3: "9", level4: "10" }; // שלבים ששינינו להם שם (לפני version 3)
 const renameId = (id) => RENAMED_IDS[id] || id;
+
+// הסדר של version 3 -> מספר השלב החדש (לפי שם הקובץ המקורי של התמונה)
+const V3_TO_V4 = {
+  "1": "1", "2": "5", "3": "2", "4": "14", "5": "11",
+  "6": "10", "7": "26", "8": "19", "9": "3", "10": "4"
+};
+const toCurrentId = (id) => V3_TO_V4[renameId(id)] || renameId(id);
 
 const progress = { level: {}, ...loadProgress() };
 
@@ -155,20 +154,23 @@ function loadProgress() {
     const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY));
     if (!saved) return {};
 
+    const level = {};
+    const add = (id, stars) => { level[id] = Math.max(level[id] || 0, stars); };
+
+    if (saved.version === 4 && saved.level && typeof saved.level === "object") {
+      return { level: saved.level };
+    }
+
     if (saved.version === 3 && saved.level && typeof saved.level === "object") {
-      const level = {};
-      Object.entries(saved.level).forEach(([id, stars]) => {
-        level[renameId(id)] = Math.max(level[renameId(id)] || 0, stars);
-      });
+      Object.entries(saved.level).forEach(([id, stars]) => add(toCurrentId(id), stars));
       return { level };
     }
 
     // המרה מהפורמט הישן: כל שלב שנפתר נחשב כקל שנפתר
     if (Array.isArray(saved.completed)) {
       const legacy = !saved.version;
-      const level = {};
       saved.completed.forEach(key => {
-        level[renameId((legacy && LEGACY_IDS[key]) || String(key))] = 1;
+        add(toCurrentId((legacy && LEGACY_IDS[key]) || String(key)), 1);
       });
       return { level };
     }
@@ -180,7 +182,7 @@ function loadProgress() {
 
 function saveProgress() {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 3, ...progress }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 4, ...progress }));
   } catch {
     // אחסון חסום - ההתקדמות תחזיק עד רענון
   }

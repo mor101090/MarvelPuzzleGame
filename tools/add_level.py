@@ -3,10 +3,11 @@
 
 Usage:  python3 tools/add_level.py path/to/picture.jpg [level-id]
 
-- level-id defaults to the file name without extension (e.g. 4.jpg -> "4").
+- level-id is the level number (levels are numbered 1, 2, 3, ...). It defaults to the file
+  name without extension, so name the file by its number (e.g. 31.jpg -> level 31).
 - Writes assets/levels/<id>.webp          (max 1200px on the long side)
          assets/levels/thumbs/<id>.webp   (max 480px, for the level cards)
-- Prints the line to add to the `levels` list in game.js.
+- Tells you to raise LEVEL_COUNT in game.js.
 Needs Pillow:  pip install pillow
 """
 import os
@@ -39,7 +40,7 @@ def main():
         fit(im, max_side).save(out, "WEBP", quality=quality, method=6)
         print(f"{os.path.relpath(out, ROOT)}  {os.path.getsize(out) // 1024} KB")
 
-    print(f'\nAdd to `levels` in game.js, in the right order:\n  {{ id: "{level_id}" }},')
+    print(f'\nLevel {level_id} is ready. In game.js raise LEVEL_COUNT so it includes level {level_id}.')
 
 
 if __name__ == "__main__":
