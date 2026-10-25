@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.19.0] (`@@0.19.0`) - Music
+### Added
+- **Background music:** "Motif Hero" plays in a loop at a soft volume
+  (`assets/audio/motif_hero.mp3`, 93 s, re-encoded to 128 kbps, trailing silence
+  trimmed so the loop has no gap).
+- The **Music** switch in Settings now works and is saved on the device.
+- Music starts on the first tap (browsers block sound before that) and pauses
+  when the game is in the background or the screen is off.
+### Changed
+- Removed the "coming soon" label from the Music switch.
+
 ## [0.18.0] (`4199e9f`) - More pieces every 10 levels
 ### Changed
 - The number of pieces now grows every 10 levels instead of being set per level:

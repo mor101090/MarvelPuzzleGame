@@ -96,6 +96,40 @@ function vibrate(pattern) {
   iosHapticTick();
 }
 
+// =====================
+// Music (מתנגנת בלולאה, אחרי לחיצה ראשונה - דפדפנים לא מאפשרים לנגן לפני זה)
+// =====================
+const MUSIC_VOLUME = 0.35;
+const music = new Audio("assets/audio/motif_hero.mp3");
+music.loop = true;
+music.volume = MUSIC_VOLUME;
+music.preload = "auto";
+
+let musicUnlocked = false;
+
+function updateMusic() {
+  const shouldPlay = settings.music && musicUnlocked && !document.hidden;
+  if (shouldPlay && music.paused) {
+    music.play().catch(() => {
+      // נחסם (למשל בלי אינטראקציה) - ננסה שוב בלחיצה הבאה
+      musicUnlocked = false;
+    });
+  } else if (!shouldPlay && !music.paused) {
+    music.pause();
+  }
+}
+
+function unlockMusic() {
+  if (musicUnlocked) return;
+  musicUnlocked = true;
+  updateMusic();
+}
+
+document.addEventListener("pointerdown", unlockMusic);
+document.addEventListener("keydown", unlockMusic);
+// עוצרים כשהאפליקציה ברקע או שהמסך כבוי
+document.addEventListener("visibilitychange", updateMusic);
+
 // צליל לחיצה לכל כפתור במשחק
 document.addEventListener("click", (e) => {
   if (e.target.closest("button")) {
