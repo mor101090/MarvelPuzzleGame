@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.19.0] (`@@0.19.0`) - Music
+## [0.19.0] (`4e5ff1b`) - Music
 ### Added
 - **Background music:** "Motif Hero" plays in a loop at a soft volume
   (`assets/audio/motif_hero.mp3`, 93 s, re-encoded to 128 kbps, trailing silence
