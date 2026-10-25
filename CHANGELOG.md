@@ -4,6 +4,30 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.23.0] (`ceee8da`) - Stars by moves, per difficulty
+### Added
+- **Every difficulty has its own 1 to 3 stars, by the number of moves.** Easy,
+  Medium and Hard each keep their best stars.
+- The number of moves is compared to the minimum for that shuffle (the fewest
+  swaps that solve it), so every shuffle is equally fair:
+  - 3 stars: up to 1.5 x the minimum + 2 moves.
+  - 2 stars: up to 2.5 x the minimum + 4 moves.
+  - 1 star: any number of moves.
+  I checked this against a bot that plays near perfectly: it needs about the
+  minimum, so a human has room for mistakes and still gets 3 stars.
+- The stars at the top right of the game count down live while you play.
+- The win screen says how many moves you need for the next star.
+- Choose Level shows the total stars of each level (`n/9`). Tapping a level shows
+  the stars of each difficulty.
+- **Boss** section in Choose Level, marked **Coming soon**. Boss levels will come
+  after every 10 levels, with shattered pieces that you rotate and join.
+### Changed
+- The temporary unlock switch is now `UNLOCK_ALL_LEVELS`: all levels, difficulties
+  and pictures stay open, but the stars are real. It stays on until you say
+  otherwise.
+- Saves are converted (version 6). Levels you already solved keep one star per
+  difficulty you had cleared, and you can improve them.
+
 ## [0.22.1] (`261262a`) - Everything shown as solved (temporary)
 ### Changed
 - **All 30 levels look finished on Hard**, so you can open any level and pick
