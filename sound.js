@@ -1,13 +1,21 @@
 // =====================
 // Sound effects (נוצרים בקוד - בלי קבצי אודיו)
 // =====================
+// איזון: הצלילים והמוזיקה עוברים כל אחד דרך "ערוץ" עם עוצמה משלו
+const SFX_VOLUME = 1.8;    // מגביר את כל צלילי המשחק
+const MUSIC_VOLUME = 0.22; // מוזיקה ברקע, מתחת לצלילים
+
 let audioCtx = null;
+let sfxBus = null;
 
 function getAudioCtx() {
   if (!audioCtx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     audioCtx = new AC();
+    sfxBus = audioCtx.createGain();
+    sfxBus.gain.value = SFX_VOLUME;
+    sfxBus.connect(audioCtx.destination);
   }
   // דפדפנים מתחילים את האודיו "מושהה" עד אינטראקציה ראשונה
   if (audioCtx.state === "suspended") audioCtx.resume();
@@ -27,13 +35,13 @@ function tone(ctx, freq, start, duration, { type = "sine", gain = 0.15, slideTo 
   amp.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
   amp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
 
-  osc.connect(amp).connect(ctx.destination);
+  osc.connect(amp).connect(sfxBus);
   osc.start(t0);
   osc.stop(t0 + duration + 0.02);
 }
 
 const SOUNDS = {
-  click:   (ctx) => tone(ctx, 700, 0, 0.06, { type: "square", gain: 0.05 }),
+  click:   (ctx) => tone(ctx, 700, 0, 0.06, { type: "square", gain: 0.08 }),
   pick:    (ctx) => tone(ctx, 420, 0, 0.09, { type: "triangle", gain: 0.12, slideTo: 640 }),
   drop:    (ctx) => tone(ctx, 520, 0, 0.1, { type: "triangle", gain: 0.12, slideTo: 300 }),
   snap:    (ctx) => {
@@ -99,13 +107,30 @@ function vibrate(pattern) {
 // =====================
 // Music (מתנגנת בלולאה, אחרי לחיצה ראשונה - דפדפנים לא מאפשרים לנגן לפני זה)
 // =====================
-const MUSIC_VOLUME = 0.35;
 const music = new Audio("assets/audio/motif_hero.mp3");
 music.loop = true;
 music.volume = MUSIC_VOLUME;
 music.preload = "auto";
 
 let musicUnlocked = false;
+let musicRouted = false;
+
+// באייפון Safari מתעלם מ-music.volume ומנגן תמיד בעוצמה מלאה, ולכן המוזיקה
+// "בלעה" את הצלילים. מעבירים אותה דרך Web Audio, שם העוצמה עובדת בכל מכשיר.
+function routeMusic() {
+  if (musicRouted) return;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const gain = ctx.createGain();
+    gain.gain.value = MUSIC_VOLUME;
+    ctx.createMediaElementSource(music).connect(gain).connect(ctx.destination);
+    music.volume = 1; // העוצמה נקבעת עכשיו ב-gain
+    musicRouted = true;
+  } catch {
+    // לא נתמך - נשארים עם music.volume
+  }
+}
 
 function updateMusic() {
   const shouldPlay = settings.music && musicUnlocked && !document.hidden;
@@ -122,6 +147,7 @@ function updateMusic() {
 function unlockMusic() {
   if (musicUnlocked) return;
   musicUnlocked = true;
+  routeMusic();
   updateMusic();
 }
 
@@ -130,10 +156,11 @@ document.addEventListener("keydown", unlockMusic);
 // עוצרים כשהאפליקציה ברקע או שהמסך כבוי
 document.addEventListener("visibilitychange", updateMusic);
 
-// צליל לחיצה לכל כפתור במשחק
+// צליל לחיצה לכל כפתור במשחק. capture = נתפס לפני כל כפתור אחר,
+// גם כפתורים שעוצרים את האירוע (כמו כפתורי Easy/Medium/Hard)
 document.addEventListener("click", (e) => {
   if (e.target.closest("button")) {
     playSound("click");
     vibrate(15);
   }
-});
+}, true);

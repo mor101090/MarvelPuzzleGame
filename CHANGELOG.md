@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.19.1] (`8d4adcb`) - Sound balance
+### Fixed
+- **Music drowned out the sound effects on iPhone.** Safari ignores the volume
+  of an audio element and always played the music at full volume. The music now
+  goes through Web Audio, where its volume is respected on every device.
+- **The Easy / Medium / Hard buttons had no click sound.** The click listener now
+  catches every button before anything else handles it.
+### Changed
+- Sound effects are louder (1.8x, the click itself a bit more) and the music is
+  softer (0.22), so clicks and moves are clearly heard over the music.
+
 ## [0.19.0] (`4e5ff1b`) - Music
 ### Added
 - **Background music:** "Motif Hero" plays in a loop at a soft volume
