@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.22.1] (`261262a`) - Everything shown as solved (temporary)
+### Changed
+- **All 30 levels look finished on Hard**, so you can open any level and pick
+  Easy, Medium or Hard, with the picture shown, exactly like after finishing the
+  game. This is a temporary testing switch in the code (`ALL_LEVELS_SOLVED` in
+  `game.js`). Your real saved progress is not touched: Play still continues from
+  your real position and the win screen shows the real stars.
+### Removed
+- The "Unlock all levels" setting and the picture-less difficulty picker from 0.22.0.
+  Nothing else in the game changed.
+
 ## [0.22.0] (`9bc9a37`) - Unlock all levels
 ### Added
 - **Unlock all levels** switch in Settings, **on by default for now**, so every
