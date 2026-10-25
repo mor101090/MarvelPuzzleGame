@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.19.1] (`@@0.19.1`) - Sound balance
+## [0.19.1] (`8d4adcb`) - Sound balance
 ### Fixed
 - **Music drowned out the sound effects on iPhone.** Safari ignores the volume
   of an audio element and always played the music at full volume. The music now
