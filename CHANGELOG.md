@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.17.0] (`@@0.17.0`) - Five new levels
+## [0.17.0] (`0db7fae`) - Five new levels
 ### Added
 - Five new levels, `4` to `8`: Marvel heroes, Avengers, Captain America vs Iron
   Man, Deadpool, and Iron Man with a hooded hero. There are now 10 levels,
