@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.22.1] (`@@0.22.1`) - Everything shown as solved (temporary)
+## [0.22.1] (`261262a`) - Everything shown as solved (temporary)
 ### Changed
 - **All 30 levels look finished on Hard**, so you can open any level and pick
   Easy, Medium or Hard, with the picture shown, exactly like after finishing the
