@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.22.0] (`9bc9a37`) - Unlock all levels
+### Added
+- **Unlock all levels** switch in Settings, **on by default for now**, so every
+  level and every difficulty (Easy, Medium, Hard) can be played right away.
+- Tapping a level that is not solved yet opens a difficulty picker that does not
+  show the picture. Solving a level directly on Hard gives all 3 stars.
+### Notes
+- Turn the switch off in Settings to go back to normal progress: a level opens
+  when the one before it is solved, and Medium and Hard open in order.
+- Your saved stars are not changed by the switch.
+
 ## [0.21.1] (`7a97604`) - Existing levels keep their place
 ### Fixed
 - **Progress looked erased after 0.21.0.** That version reordered the 10 existing
