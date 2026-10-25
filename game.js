@@ -58,6 +58,11 @@ const levels = [
   { id: "1",      grid: 3, category: "easy" },
   { id: "2",      grid: 3, category: "easy" },
   { id: "3",      grid: 4, category: "easy" },
+  { id: "4",      grid: 4, category: "easy" },
+  { id: "5",      grid: 4, category: "easy" },
+  { id: "6",      grid: 4, category: "easy" },
+  { id: "7",      grid: 3, category: "easy" },
+  { id: "8",      grid: 4, category: "easy" },
   { id: "level3", grid: 3, category: "easy" },
   { id: "level4", grid: 4, category: "easy" }
 ].map(level => ({

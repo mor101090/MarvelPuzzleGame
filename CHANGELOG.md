@@ -4,6 +4,14 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.17.0] (`0db7fae`) - Five new levels
+### Added
+- Five new levels, `4` to `8`: Marvel heroes, Avengers, Captain America vs Iron
+  Man, Deadpool, and Iron Man with a hooded hero. There are now 10 levels,
+  ordered by file name (`1` to `8`, then `level3`, `level4`).
+- All pictures converted to WebP with thumbnails using `tools/add_level.py`.
+- Easy grid: 4x4 for the new levels, 3x3 for level 7 (a small, narrow picture).
+
 ## [0.16.0] (`9cd3fc9`) - Landscape and zoom
 ### Added
 - **Landscape:** the game adapts when the phone is turned sideways. The board
