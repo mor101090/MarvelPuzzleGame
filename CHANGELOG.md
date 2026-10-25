@@ -4,6 +4,18 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.20.0] (`64e49e7`) - Level order and all groups
+### Changed
+- Levels are now numbered by file name, in order from 1 to 10. The last two
+  levels, which were `level3` and `level4`, are now `9` and `10`
+  (`assets/levels/9.webp`, `10.webp` and their thumbnails). Saved stars are
+  kept: old saves are converted to the new names automatically.
+### Added
+- Choose Level shows **all** groups: Rookie, Hero, Avenger, Legend and Cosmic.
+  Groups that have no levels yet show a locked **Coming soon** bar.
+- Each group shows how many pieces its levels have (Easy, Medium, Hard), for
+  example `9 · 18 · 36 pieces`.
+
 ## [0.19.1] (`8d4adcb`) - Sound balance
 ### Fixed
 - **Music drowned out the sound effects on iPhone.** Safari ignores the volume

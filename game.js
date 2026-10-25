@@ -63,8 +63,8 @@ const levels = [
   { id: "6" },
   { id: "7" },
   { id: "8" },
-  { id: "level3" },
-  { id: "level4" }
+  { id: "9" },
+  { id: "10" }
 ].map((level, index) => {
   const group = Math.floor(index / LEVELS_PER_GROUP);
   return {
@@ -76,10 +76,14 @@ const levels = [
   };
 });
 
-// קבוצה לכל 10 שלבים (נוצרות לבד לפי מספר השלבים)
+// קבוצה לכל 10 שלבים. מראים את כל הקבוצות, גם כאלה שעוד אין בהן שלבים (נעולות)
 const categories = Array.from(
-  { length: Math.ceil(levels.length / LEVELS_PER_GROUP) },
-  (_, group) => ({ id: group, name: GROUP_NAMES[group] || `Group ${group + 1}` })
+  { length: Math.max(GROUP_NAMES.length, Math.ceil(levels.length / LEVELS_PER_GROUP)) },
+  (_, group) => ({
+    id: group,
+    name: GROUP_NAMES[group] || `Group ${group + 1}`,
+    grid: FIRST_GRID + group
+  })
 );
 
 let currentLevelIndex = 0;
@@ -138,9 +142,11 @@ let winStarTimers = [];
 // =====================
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
-// level = { "level3": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
+// level = { "9": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
 // שמירות ישנות: version 1 נשמרו לפי אינדקס, version 2 לפי id עם כוכבי מהלכים
-const LEGACY_IDS = ["level3", "level4"];
+const LEGACY_IDS = ["9", "10"];                 // השלבים הראשונים בשמירה לפי אינדקס
+const RENAMED_IDS = { level3: "9", level4: "10" }; // שלבים ששינינו להם שם
+const renameId = (id) => RENAMED_IDS[id] || id;
 
 const progress = { level: {}, ...loadProgress() };
 
@@ -150,7 +156,11 @@ function loadProgress() {
     if (!saved) return {};
 
     if (saved.version === 3 && saved.level && typeof saved.level === "object") {
-      return { level: saved.level };
+      const level = {};
+      Object.entries(saved.level).forEach(([id, stars]) => {
+        level[renameId(id)] = Math.max(level[renameId(id)] || 0, stars);
+      });
+      return { level };
     }
 
     // המרה מהפורמט הישן: כל שלב שנפתר נחשב כקל שנפתר
@@ -158,7 +168,7 @@ function loadProgress() {
       const legacy = !saved.version;
       const level = {};
       saved.completed.forEach(key => {
-        level[(legacy && LEGACY_IDS[key]) || String(key)] = 1;
+        level[renameId((legacy && LEGACY_IDS[key]) || String(key))] = 1;
       });
       return { level };
     }
@@ -329,8 +339,25 @@ function renderLevelSelect() {
     title.textContent = category.name;
     section.appendChild(title);
 
+    // כמה חלקים בקבוצה הזו: קל / בינוני / קשה
+    const base = category.grid * category.grid;
+    const sub = document.createElement("p");
+    sub.className = "category-sub";
+    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces`;
+    section.appendChild(sub);
+
     const grid = document.createElement("div");
     grid.className = "level-grid";
+
+    // קבוצה שעוד אין בה שלבים
+    if (!levels.some(level => level.category === category.id)) {
+      const soon = document.createElement("div");
+      soon.className = "group-soon";
+      soon.innerHTML = LOCK_SVG + `<span>Coming soon</span>`;
+      section.appendChild(soon);
+      levelList.appendChild(section);
+      return;
+    }
 
     levels.forEach((level, index) => {
       if (level.category !== category.id) return;
