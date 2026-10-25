@@ -19,6 +19,10 @@ const chooseLevelBtn = document.getElementById("chooseLevelBtn");
 const levelScreen = document.getElementById("levelScreen");
 const levelList = document.getElementById("levelList");
 const levelsBackBtn = document.getElementById("levelsBackBtn");
+const bossScreen = document.getElementById("bossScreen");
+const bossList = document.getElementById("bossList");
+const bossBtn = document.getElementById("bossBtn");
+const bossBackBtn = document.getElementById("bossBackBtn");
 const levelLabel = document.getElementById("levelLabel");
 const movesCount = document.getElementById("movesCount");
 const hudStars = document.getElementById("hudStars");
@@ -334,13 +338,18 @@ function showScreen(screen) {
   cancelDrag();
   closeWinScreen();
   closeViewer();
-  [homeScreen, levelScreen, gameScreen].forEach(el => {
+  [homeScreen, levelScreen, bossScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
 }
 
 function showHome() {
   showScreen(homeScreen);
+}
+
+function showBoss() {
+  renderBossSelect();
+  showScreen(bossScreen);
 }
 
 function showLevels() {
@@ -368,6 +377,8 @@ backBtn?.addEventListener("click", () => {
 
 chooseLevelBtn?.addEventListener("click", showLevels);
 levelsBackBtn?.addEventListener("click", showHome);
+bossBtn?.addEventListener("click", showBoss);
+bossBackBtn?.addEventListener("click", showLevels);
 
 // =====================
 // Level Select
@@ -470,14 +481,42 @@ function renderLevelSelect() {
     section.appendChild(grid);
     levelList.appendChild(section);
   });
+}
 
-  // שלב בוס: אחרי כל 10 שלבים, לפני שעולים רמה (בקרוב)
-  const boss = document.createElement("section");
-  boss.innerHTML =
+// =====================
+// Boss select (שלב בוס אחרי כל 10 שלבים, לפני שעולים רמה - בקרוב)
+// =====================
+function renderBossSelect() {
+  bossList.innerHTML = "";
+
+  const section = document.createElement("section");
+  section.innerHTML =
     `<h2 class="category-title">Boss</h2>` +
-    `<p class="category-sub">Shattered pieces · rotate and join · after every 10 levels</p>` +
+    `<p class="category-sub">Shattered pieces · rotate and join</p>` +
     `<div class="group-soon">${LOCK_SVG}<span>Coming soon</span></div>`;
-  levelList.appendChild(boss);
+
+  // בוס אחד לסוף כל קבוצה של 10 שלבים
+  const grid = document.createElement("div");
+  grid.className = "level-grid boss-grid";
+  categories.forEach((category, index) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "level-card is-locked";
+    card.setAttribute("aria-label", `Boss ${index + 1}, ${category.name}, coming soon`);
+    card.innerHTML =
+      LOCK_SVG +
+      `<span class="level-tag">BOSS ${index + 1}<small>after ${category.name}</small></span>`;
+    card.addEventListener("click", () => {
+      playSound("invalid");
+      vibrate([15, 40, 15]);
+      card.classList.remove("shake");
+      void card.offsetWidth;
+      card.classList.add("shake");
+    });
+    grid.appendChild(card);
+  });
+  section.appendChild(grid);
+  bossList.appendChild(section);
 }
 
 // =====================

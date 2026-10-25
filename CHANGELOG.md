@@ -4,6 +4,15 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.23.1] (`44b8fe8`) - Boss has its own screen
+### Changed
+- The Boss section is no longer at the bottom of Choose Level. There is now a
+  **Boss** button at the top right of Choose Level that opens a screen of its own,
+  built like Choose Level but for bosses only.
+- The Boss screen shows one locked boss card after each group of 10 levels
+  (Boss 1 after Rookie, Boss 2 after Hero, and so on) and a **Coming soon** bar.
+  Back returns to Choose Level.
+
 ## [0.23.0] (`ceee8da`) - Stars by moves, per difficulty
 ### Added
 - **Every difficulty has its own 1 to 3 stars, by the number of moves.** Easy,
