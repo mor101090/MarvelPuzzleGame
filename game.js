@@ -195,7 +195,7 @@ function isCompleted(index) {
 
 // רמה נפתחת אחרי שהרמה שלפניה נפתרה
 function isDifficultyUnlocked(index, difficulty) {
-  return difficulty === 1 || getStars(index) >= difficulty - 1;
+  return settings.unlockAll || difficulty === 1 || getStars(index) >= difficulty - 1;
 }
 
 function recordResult(index, difficulty) {
@@ -255,7 +255,7 @@ function updateHud() {
 
 // שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
 function isUnlocked(index) {
-  return index === 0 || isCompleted(index) || isCompleted(index - 1);
+  return settings.unlockAll || index === 0 || isCompleted(index) || isCompleted(index - 1);
 }
 
 // השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
@@ -393,8 +393,8 @@ function renderLevelSelect() {
           card.classList.add("shake");
           return;
         }
-        // שלב שנפתר: מציגים את התמונה בגדול עם אפשרות לשחק שוב
-        if (solved) {
+        // שלב שנפתר (או כשהכל פתוח): בוחרים רמה. בשלב שלא נפתר התמונה לא מוצגת
+        if (solved || settings.unlockAll) {
           openViewer(index);
           return;
         }
@@ -415,11 +415,19 @@ function renderLevelSelect() {
 let viewerIndex = -1;
 
 function openViewer(index) {
+  const solved = isCompleted(index);
   viewerIndex = index;
-  viewerImg.src = levels[index].image;
-  viewerImg.alt = `Level ${index + 1}`;
-  viewerCaption.innerHTML =
-    `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`;
+  viewerModal.classList.toggle("no-picture", !solved);
+  if (solved) {
+    viewerImg.src = levels[index].image;
+    viewerImg.alt = `Level ${index + 1}`;
+  } else {
+    viewerImg.removeAttribute("src"); // לא חושפים את התמונה לפני שפותרים
+    viewerImg.alt = "";
+  }
+  viewerCaption.innerHTML = solved
+    ? `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`
+    : `<span>LEVEL ${index + 1}</span><span>Pick a difficulty</span>`;
 
   // כפתורי רמות: קל / בינוני / קשה (נפתחות לפי הסדר)
   viewerLevels.innerHTML = "";

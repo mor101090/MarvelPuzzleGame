@@ -793,3 +793,14 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
     padding: 10px 16px;
   }
 }
+
+/* בחירת רמה בשלב שעוד לא נפתר: בלי תמונה */
+.no-picture .viewer img{
+  display: none;
+}
+
+.no-picture .viewer figcaption{
+  font-size: 22px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
