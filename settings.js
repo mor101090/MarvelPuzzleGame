@@ -5,7 +5,7 @@ const SETTINGS_KEY = "marvelPuzzle.settings";
 
 const settings = {
   sound: true,
-  music: true,      // אין מוזיקה עדיין - ההגדרה נשמרת לשימוש בהמשך
+  music: true,
   vibration: true,
   ...loadSettings()
 };
@@ -53,6 +53,7 @@ Object.entries(settingsToggles).forEach(([key, input]) => {
     saveSettings();
     playSound("click");
     if (key === "vibration" && input.checked) vibrate(20);
+    if (key === "music") updateMusic();
   });
 });
 
