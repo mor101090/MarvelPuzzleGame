@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.18.0] (`@@0.18.0`) - More pieces every 10 levels
+## [0.18.0] (`4199e9f`) - More pieces every 10 levels
 ### Changed
 - The number of pieces now grows every 10 levels instead of being set per level:
   - Levels 1-10 (**Rookie**): Easy 3x3 = 9, Medium 18, Hard 36 pieces.
