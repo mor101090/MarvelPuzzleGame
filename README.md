@@ -5,6 +5,8 @@
 1. Convert the picture to WebP and create its thumbnail:
    `python3 tools/add_level.py path/to/picture.jpg`
 2. Add the printed line to the `levels` list in `game.js`. The order of the list is the order of the levels.
+   Every 10 levels form a group with more pieces: Easy is 3x3 in levels 1-10, 4x4 in 11-20, 5x5 in 21-30, and so on
+   (Medium has twice the pieces of Easy, Hard twice the pieces of Medium).
 3. Add an entry to `CHANGELOG.md`.
 
 

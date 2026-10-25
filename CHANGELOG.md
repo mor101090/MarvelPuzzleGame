@@ -4,6 +4,21 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.18.0] (`4199e9f`) - More pieces every 10 levels
+### Changed
+- The number of pieces now grows every 10 levels instead of being set per level:
+  - Levels 1-10 (**Rookie**): Easy 3x3 = 9, Medium 18, Hard 36 pieces.
+  - Levels 11-20 (**Hero**): Easy 4x4 = 16, Medium 32, Hard 64.
+  - Levels 21-30 (**Avenger**): Easy 5x5 = 25, Medium 50, Hard 100. And so on.
+- Choose Level shows one section per group of 10. A new section appears by
+  itself when level 11 is added.
+- All 10 current levels are in the first group, so levels that were 4x4 on Easy
+  are now 3x3. Saved stars are kept.
+- Adding a level only needs its id (`tools/add_level.py` prints the line).
+### Removed
+- The per-level `grid` and `category` settings, and the old "Easy" section name
+  (it was easy to confuse with the Easy difficulty).
+
 ## [0.17.0] (`0db7fae`) - Five new levels
 ### Added
 - Five new levels, `4` to `8`: Marvel heroes, Avengers, Captain America vs Iron

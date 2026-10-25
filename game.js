@@ -46,30 +46,41 @@ const DIFFICULTIES = [
   { name: "Medium", factor: 2 },
   { name: "Hard",   factor: 4 }
 ];
-// קטגוריות: כדי להוסיף קטגוריה קשה יותר - מוסיפים כאן ומסמנים category בשלבים
-const categories = [
-  { id: "easy", name: "Easy" }
-];
+// כל 10 שלבים = קבוצה חדשה עם יותר חלקים: הרשת בקל גדלה ב-1 (3x3, אחר כך 4x4, 5x5...)
+const LEVELS_PER_GROUP = 10;
+const FIRST_GRID = 3;
+const GROUP_NAMES = ["Rookie", "Hero", "Avenger", "Legend", "Cosmic"];
 
 // הסדר כאן הוא סדר השלבים (ממוין לפי שם הקובץ). id קבוע - ההתקדמות נשמרת לפיו,
 // כך שאפשר להוסיף או לסדר שלבים בלי לאבד התקדמות.
 // thumb = גרסה קטנה לכרטיסים במסך בחירת השלב (נטענת מהר)
 const levels = [
-  { id: "1",      grid: 3, category: "easy" },
-  { id: "2",      grid: 3, category: "easy" },
-  { id: "3",      grid: 4, category: "easy" },
-  { id: "4",      grid: 4, category: "easy" },
-  { id: "5",      grid: 4, category: "easy" },
-  { id: "6",      grid: 4, category: "easy" },
-  { id: "7",      grid: 3, category: "easy" },
-  { id: "8",      grid: 4, category: "easy" },
-  { id: "level3", grid: 3, category: "easy" },
-  { id: "level4", grid: 4, category: "easy" }
-].map(level => ({
-  ...level,
-  image: `assets/levels/${level.id}.webp`,
-  thumb: `assets/levels/thumbs/${level.id}.webp`
-}));
+  { id: "1" },
+  { id: "2" },
+  { id: "3" },
+  { id: "4" },
+  { id: "5" },
+  { id: "6" },
+  { id: "7" },
+  { id: "8" },
+  { id: "level3" },
+  { id: "level4" }
+].map((level, index) => {
+  const group = Math.floor(index / LEVELS_PER_GROUP);
+  return {
+    ...level,
+    grid: FIRST_GRID + group,
+    category: group,
+    image: `assets/levels/${level.id}.webp`,
+    thumb: `assets/levels/thumbs/${level.id}.webp`
+  };
+});
+
+// קבוצה לכל 10 שלבים (נוצרות לבד לפי מספר השלבים)
+const categories = Array.from(
+  { length: Math.ceil(levels.length / LEVELS_PER_GROUP) },
+  (_, group) => ({ id: group, name: GROUP_NAMES[group] || `Group ${group + 1}` })
+);
 
 let currentLevelIndex = 0;
 let currentImageSrc = levels[0].image;

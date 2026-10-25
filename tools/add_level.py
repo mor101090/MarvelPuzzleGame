@@ -39,7 +39,7 @@ def main():
         fit(im, max_side).save(out, "WEBP", quality=quality, method=6)
         print(f"{os.path.relpath(out, ROOT)}  {os.path.getsize(out) // 1024} KB")
 
-    print(f'\nAdd to `levels` in game.js, in the right order:\n  {{ id: "{level_id}", grid: 3, category: "easy" }},')
+    print(f'\nAdd to `levels` in game.js, in the right order:\n  {{ id: "{level_id}" }},')
 
 
 if __name__ == "__main__":
