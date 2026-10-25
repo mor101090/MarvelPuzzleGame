@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.22.0] (`@@0.22.0`) - Unlock all levels
+## [0.22.0] (`9bc9a37`) - Unlock all levels
 ### Added
 - **Unlock all levels** switch in Settings, **on by default for now**, so every
   level and every difficulty (Easy, Medium, Hard) can be played right away.
