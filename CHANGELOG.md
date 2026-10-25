@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.20.0] (`@@0.20.0`) - Level order and all groups
+## [0.20.0] (`64e49e7`) - Level order and all groups
 ### Changed
 - Levels are now numbered by file name, in order from 1 to 10. The last two
   levels, which were `level3` and `level4`, are now `9` and `10`
