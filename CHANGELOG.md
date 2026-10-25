@@ -4,6 +4,17 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.21.1] (`7a97604`) - Existing levels keep their place
+### Fixed
+- **Progress looked erased after 0.21.0.** That version reordered the 10 existing
+  levels by file name, so the levels you had solved moved to places like 10, 11,
+  14, 19 and 26 and the first levels looked locked. The 10 existing levels are
+  back in their original places (1 to 10) with your stars.
+### Changed
+- The 20 new pictures come **after** them, as levels 11-30, in the order of their
+  file names (`level6`, `level7`, `level8`, `level9`, `level12`, `level13`, ...).
+- Saves made while 0.21.0 was live (version 4) are converted to the new numbering.
+
 ## [0.21.0] (`8bb8d80`) - 30 levels
 ### Added
 - **20 new levels**, from the full set of 30 pictures (`level1` to `level30`).
@@ -11,7 +22,7 @@ minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
   and levels 21-30 are the **Avenger** group (Easy 5x5 = 25, Medium 50, Hard 100).
   Legend and Cosmic are still locked as Coming soon.
 ### Changed
-- **Level order now follows the file names**, `level1` to `level30`. The 10
+- (Replaced in 0.21.1.) **Level order now follows the file names**, `level1` to `level30`. The 10
   existing levels moved to the place their file name says (for example the
   Civil War picture was level 2 and is now level 10). Pictures that were already
   in the game were not added twice.
