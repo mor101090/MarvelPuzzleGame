@@ -7,7 +7,6 @@ const settings = {
   sound: true,
   music: true,
   vibration: true,
-  unlockAll: true,   // זמני: פותח את כל השלבים והרמות כדי לעבור על הכל
   ...loadSettings()
 };
 
@@ -34,8 +33,7 @@ const settingsModal = document.getElementById("settingsModal");
 const settingsToggles = {
   sound: document.getElementById("soundToggle"),
   music: document.getElementById("musicToggle"),
-  vibration: document.getElementById("vibrationToggle"),
-  unlockAll: document.getElementById("unlockToggle")
+  vibration: document.getElementById("vibrationToggle")
 };
 
 function openSettings() {
@@ -55,8 +53,6 @@ Object.entries(settingsToggles).forEach(([key, input]) => {
     saveSettings();
     playSound("click");
     if (key === "vibration" && input.checked) vibrate(20);
-    // מרענן את מסך בחירת השלב אם הוא פתוח מאחורי ההגדרות
-    if (key === "unlockAll" && typeof renderLevelSelect === "function") renderLevelSelect();
     if (key === "music") updateMusic();
   });
 });

@@ -185,8 +185,17 @@ function saveProgress() {
 }
 
 // הרמה הגבוהה ביותר שנפתרה בשלב (0-3) = מספר הכוכבים
-function getStars(index) {
+// הרמה הגבוהה ביותר שבאמת נפתרה (ההתקדמות האמיתית ששמורה)
+function realStars(index) {
   return progress.level[levels[index].id] || 0;
+}
+
+// זמני, לבדיקות: כל השלבים נראים כאילו סיימת אותם ברמה הקשה, כדי לבחור כל שלב ורמה.
+// לא נוגע בהתקדמות השמורה. כדי לחזור להתקדמות רגילה - משנים ל-false.
+const ALL_LEVELS_SOLVED = true;
+
+function getStars(index) {
+  return ALL_LEVELS_SOLVED ? 3 : realStars(index);
 }
 
 function isCompleted(index) {
@@ -195,7 +204,7 @@ function isCompleted(index) {
 
 // רמה נפתחת אחרי שהרמה שלפניה נפתרה
 function isDifficultyUnlocked(index, difficulty) {
-  return settings.unlockAll || difficulty === 1 || getStars(index) >= difficulty - 1;
+  return difficulty === 1 || getStars(index) >= difficulty - 1;
 }
 
 function recordResult(index, difficulty) {
@@ -255,12 +264,12 @@ function updateHud() {
 
 // שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
 function isUnlocked(index) {
-  return settings.unlockAll || index === 0 || isCompleted(index) || isCompleted(index - 1);
+  return index === 0 || isCompleted(index) || isCompleted(index - 1);
 }
 
 // השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
 function nextPlayableLevel() {
-  const i = levels.findIndex((_, idx) => !isCompleted(idx));
+  const i = levels.findIndex((_, idx) => realStars(idx) < 1);
   return i === -1 ? levels.length - 1 : i;
 }
 
@@ -393,8 +402,8 @@ function renderLevelSelect() {
           card.classList.add("shake");
           return;
         }
-        // שלב שנפתר (או כשהכל פתוח): בוחרים רמה. בשלב שלא נפתר התמונה לא מוצגת
-        if (solved || settings.unlockAll) {
+        // שלב שנפתר: מציגים את התמונה בגדול עם אפשרות לשחק שוב
+        if (solved) {
           openViewer(index);
           return;
         }
@@ -415,19 +424,11 @@ function renderLevelSelect() {
 let viewerIndex = -1;
 
 function openViewer(index) {
-  const solved = isCompleted(index);
   viewerIndex = index;
-  viewerModal.classList.toggle("no-picture", !solved);
-  if (solved) {
-    viewerImg.src = levels[index].image;
-    viewerImg.alt = `Level ${index + 1}`;
-  } else {
-    viewerImg.removeAttribute("src"); // לא חושפים את התמונה לפני שפותרים
-    viewerImg.alt = "";
-  }
-  viewerCaption.innerHTML = solved
-    ? `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`
-    : `<span>LEVEL ${index + 1}</span><span>Pick a difficulty</span>`;
+  viewerImg.src = levels[index].image;
+  viewerImg.alt = `Level ${index + 1}`;
+  viewerCaption.innerHTML =
+    `<span>LEVEL ${index + 1}</span><span class="stars">${starsHtml(getStars(index))}</span>`;
 
   // כפתורי רמות: קל / בינוני / קשה (נפתחות לפי הסדר)
   viewerLevels.innerHTML = "";
@@ -1060,7 +1061,7 @@ function nextDifficulty() {
 }
 
 function openWinScreen() {
-  const stars = getStars(currentLevelIndex);
+  const stars = realStars(currentLevelIndex);
   const harder = nextDifficulty();
 
   winTitle.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
