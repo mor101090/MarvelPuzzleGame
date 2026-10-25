@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.23.1] (`@@0.23.1`) - Boss has its own screen
+## [0.23.1] (`44b8fe8`) - Boss has its own screen
 ### Changed
 - The Boss section is no longer at the bottom of Choose Level. There is now a
   **Boss** button at the top right of Choose Level that opens a screen of its own,
