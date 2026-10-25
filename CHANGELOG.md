@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.21.0] (`@@0.21.0`) - 30 levels
+## [0.21.0] (`8bb8d80`) - 30 levels
 ### Added
 - **20 new levels**, from the full set of 30 pictures (`level1` to `level30`).
   Levels 11-20 are the **Hero** group (Easy 4x4 = 16 pieces, Medium 32, Hard 64)
