@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.23.0] (`@@0.23.0`) - Stars by moves, per difficulty
+## [0.23.0] (`ceee8da`) - Stars by moves, per difficulty
 ### Added
 - **Every difficulty has its own 1 to 3 stars, by the number of moves.** Easy,
   Medium and Hard each keep their best stars.
