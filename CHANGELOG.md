@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.25.1] (`@@0.25.1`) - Fix for the demo page
+## [0.25.1] (`52826eb`) - Fix for the demo page
 ### Fixed
 - **Play and Choose Level did nothing on the demo page** (the claude.ai link), while
   the GitHub site worked. The demo merges all scripts into one file, and the boss
