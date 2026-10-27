@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.26.0] (`@@0.26.0`) - Boss canvas, compact stage, no screen dragging
+## [0.26.0] (`b0ca120`) - Boss canvas, compact stage, no screen dragging
 ### Added
 - **A canvas in the boss level.** A faint dashed frame in the middle of the stage
   shows where the picture is built. A shard (or a joined group) that is upright
