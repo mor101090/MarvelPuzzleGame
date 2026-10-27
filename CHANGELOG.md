@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.24.0] (`@@0.24.0`) - Level order by name, confetti and victory sound
+## [0.24.0] (`c7ba41b`) - Level order by name, confetti and victory sound
 ### Changed
 - **Levels are in the order of the picture names again**: level N is the picture
   `levelN` from your files, from `level1` to `level30`. (After 0.21.1 the first
