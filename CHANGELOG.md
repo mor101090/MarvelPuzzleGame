@@ -4,6 +4,22 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.24.0] (`c7ba41b`) - Level order by name, confetti and victory sound
+### Changed
+- **Levels are in the order of the picture names again**: level N is the picture
+  `levelN` from your files, from `level1` to `level30`. (After 0.21.1 the first
+  10 levels kept an older order, which looked mixed up.)
+- Saved stars follow their pictures: saves from every older format are moved to
+  the new order automatically.
+- **After the last piece lands you get 3.5 seconds to look at the finished puzzle**
+  before the stars window opens (it was 0.9 seconds).
+### Added
+- **Confetti** flies from both sides of the screen in three bursts while you look
+  at the finished picture, plus a light rain from the top. It stops when you
+  leave the level and is skipped if the phone asks for reduced motion.
+- **New victory sound:** a rising fanfare, a full chord with sparkles, and three
+  confetti pops that match the three bursts.
+
 ## [0.23.1] (`44b8fe8`) - Boss has its own screen
 ### Changed
 - The Boss section is no longer at the bottom of Choose Level. There is now a
