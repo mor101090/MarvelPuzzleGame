@@ -24,3 +24,12 @@
 2. Push the branch and merge it into `main`. The live site updates after a minute or two.
 
 Quick alternative for a single bad change: on GitHub open the merged pull request and press **Revert**.
+
+
+## Adding a boss
+
+1. Convert the picture: `python3 tools/add_level.py path/to/picture.jpg --boss N`
+2. Add `{ id: "N", cols: 3 }` to the `bosses` list in `boss.js`. Boss N comes after level group N
+   (the boss list matches the groups in `game.js`: Rookie, Hero, Avenger, ...). `cols` is the number
+   of columns the picture is cut into; the number of rows follows from the picture shape.
+3. Add an entry to `CHANGELOG.md`.

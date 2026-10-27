@@ -4,6 +4,33 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.25.0] (`@@0.25.0`) - Boss 1: The Mortal Thor
+### Added
+- **The first boss level** ("The Mortal Thor"), opened from the Boss screen. It is
+  a different kind of puzzle:
+  - The picture is broken into **jagged shards** (about 15 to 26, cut differently
+    every time, some squares split into two triangles).
+  - The shards are **scattered on a stage**, each one turned in a random direction,
+    and they can lie on top of each other. The piece you touch comes to the top.
+  - **Drag** a shard to move it. **Tap** it to rotate it 90 degrees.
+  - **There is no grid and no snapping to a place.** A shard only sticks when it
+    meets the shard it belongs next to, turned the same way, and close enough.
+    Then the two become **one piece** that you move and rotate together, until
+    the whole picture is joined and upright.
+  - Live moves, remaining pieces and stars at the top. The finished picture glides
+    to the center, then the same 3.5 seconds, confetti and victory sound as
+    regular levels, then the stars window.
+- Stars by moves: 3 stars up to about 2.75 moves per shard, 2 stars up to about 4.4.
+  Measured with a bot that plays almost perfectly: it needs about 1.43 moves per
+  shard and solved all 120 random boards, so every board can be solved.
+- Boss 1 stays **open** with all the other levels (`UNLOCK_ALL_LEVELS`). The other
+  four bosses are still locked, Coming soon.
+- A soft "turn" sound when a shard rotates.
+- `tools/add_level.py --boss N` converts a boss picture to `assets/bosses/`.
+### Changed
+- Pages no longer get wider than the screen when a wide stage was shown before
+  turning the phone back to portrait.
+
 ## [0.24.0] (`c7ba41b`) - Level order by name, confetti and victory sound
 ### Changed
 - **Levels are in the order of the picture names again**: level N is the picture

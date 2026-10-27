@@ -149,7 +149,7 @@ const PREVIOUS_ORDER = [1, 5, 2, 14, 11, 10, 26, 19, 3, 4, 6, 7, 8, 9, 12, 13, 1
 const fromPreviousId = (id) => String(PREVIOUS_ORDER[Number(id) - 1] || id);
 
 // stars = { "9": [3, 2, 0] } - כוכבים (1-3, לפי מספר המהלכים) בכל רמה: קל, בינוני, קשה (0 = עוד לא נפתרה)
-const progress = { stars: {}, ...loadProgress() };
+const progress = { stars: {}, boss: {}, ...loadProgress() };
 
 function loadProgress() {
   try {
@@ -169,7 +169,7 @@ function loadProgress() {
     // version 7 (הנוכחי): כוכבים לכל רמה, לפי סדר השמות
     if (saved.version === 7 && saved.stars && typeof saved.stars === "object") {
       Object.entries(saved.stars).forEach(([id, list]) => add(id, list));
-      return { stars };
+      return { stars, boss: saved.boss && typeof saved.boss === "object" ? saved.boss : {} };
     }
 
     // version 6: כוכבים לכל רמה, בסדר הקודם
@@ -339,9 +339,18 @@ function nextPlayableLevel() {
 // =====================
 // Screen Navigation
 // =====================
+// מצב המשחק: שלב רגיל או שלב בוס (במה עם שברים). boss.js מגדיר leaveBoss
+let bossMode = false;
+
+function setGameMode(isBoss) {
+  bossMode = isBoss;
+  gameScreen?.classList.toggle("boss-mode", isBoss);
+}
+
 function showScreen(screen) {
   cancelDrag();
   stopConfetti();
+  if (typeof leaveBoss === "function") leaveBoss();
   closeWinScreen();
   closeViewer();
   [homeScreen, levelScreen, bossScreen, gameScreen].forEach(el => {
@@ -368,6 +377,7 @@ function showGame() {
 }
 
 playBtn?.addEventListener("click", () => {
+  setGameMode(false);
   showGame();
   if (!started) {
     started = true;
@@ -492,6 +502,12 @@ function renderLevelSelect() {
 // =====================
 // Boss select (שלב בוס אחרי כל 10 שלבים, לפני שעולים רמה - בקרוב)
 // =====================
+function isBossUnlocked(index) {
+  if (UNLOCK_ALL_LEVELS) return true;
+  const group = levels.filter(level => level.category === index);
+  return group.length > 0 && group.every(level => isCompleted(levels.indexOf(level)));
+}
+
 function renderBossSelect() {
   bossList.innerHTML = "";
 
@@ -499,26 +515,40 @@ function renderBossSelect() {
   section.innerHTML =
     `<h2 class="category-title">Boss</h2>` +
     `<p class="category-sub">Shattered pieces · rotate and join</p>` +
-    `<div class="group-soon">${LOCK_SVG}<span>Coming soon</span></div>`;
+    `<div class="group-soon">${LOCK_SVG}<span>More bosses coming soon</span></div>`;
 
   // בוס אחד לסוף כל קבוצה של 10 שלבים
   const grid = document.createElement("div");
   grid.className = "level-grid boss-grid";
   categories.forEach((category, index) => {
+    const def = typeof bosses !== "undefined" ? bosses[index] : null;
+    const unlocked = !!def && isBossUnlocked(index);
+    const stars = def ? progress.boss[def.id] || 0 : 0;
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "level-card is-locked";
-    card.setAttribute("aria-label", `Boss ${index + 1}, ${category.name}, coming soon`);
-    card.innerHTML =
-      LOCK_SVG +
-      `<span class="level-tag">BOSS ${index + 1}<small>after ${category.name}</small></span>`;
-    card.addEventListener("click", () => {
-      playSound("invalid");
-      vibrate([15, 40, 15]);
-      card.classList.remove("shake");
-      void card.offsetWidth;
-      card.classList.add("shake");
-    });
+
+    if (def && unlocked) {
+      card.className = "level-card has-picture";
+      card.style.backgroundImage = `url('${def.thumb}')`;
+      card.innerHTML =
+        `<span class="level-tag">BOSS ${index + 1}<small>after ${category.name}</small>` +
+        `<span class="stars">${starsHtml(stars)}</span></span>`;
+      card.setAttribute("aria-label", `Boss ${index + 1}, ${stars} of 3 stars`);
+      card.addEventListener("click", () => startBoss(index));
+    } else {
+      card.className = "level-card is-locked";
+      card.setAttribute("aria-label", `Boss ${index + 1}, ${category.name}, coming soon`);
+      card.innerHTML =
+        LOCK_SVG +
+        `<span class="level-tag">BOSS ${index + 1}<small>after ${category.name}</small></span>`;
+      card.addEventListener("click", () => {
+        playSound("invalid");
+        vibrate([15, 40, 15]);
+        card.classList.remove("shake");
+        void card.offsetWidth;
+        card.classList.add("shake");
+      });
+    }
     grid.appendChild(card);
   });
   section.appendChild(grid);
@@ -582,6 +612,7 @@ document.addEventListener("keydown", (e) => {
 // Level Loader
 // =====================
 function loadLevel(index, difficulty = 1) {
+  setGameMode(false);
   currentLevelIndex = index;
   currentDifficulty = difficulty;
   currentImageSrc = levels[index].image;
@@ -1324,7 +1355,9 @@ function closeWinScreen() {
 }
 
 function goNext() {
-  if (isLastLevel()) {
+  if (bossMode) {
+    showBoss();
+  } else if (isLastLevel()) {
     showLevels();
   } else {
     loadLevel(currentLevelIndex + 1, 1);
@@ -1332,13 +1365,17 @@ function goNext() {
 }
 
 winNextBtn?.addEventListener("click", goNext);
-winReplayBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, currentDifficulty));
+winReplayBtn?.addEventListener("click", () => (bossMode ? replayBoss() : loadLevel(currentLevelIndex, currentDifficulty)));
 winHarderBtn?.addEventListener("click", () => loadLevel(currentLevelIndex, nextDifficulty()));
-winLevelsBtn?.addEventListener("click", showLevels);
+winLevelsBtn?.addEventListener("click", () => (bossMode ? showBoss() : showLevels()));
 
 // לחיצה על הרקע סוגרת את המסך כדי לראות את התמונה - נשאר כפתור להמשך מתחת ללוח
 winModal?.addEventListener("click", (e) => {
   if (e.target !== winModal) return;
+  if (bossMode) {
+    dismissBossWin();
+    return;
+  }
   closeWinScreen();
   if (winMessage) {
     winMessage.textContent = `LEVEL ${currentLevelIndex + 1} COMPLETE`;
