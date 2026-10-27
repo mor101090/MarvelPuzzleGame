@@ -940,16 +940,6 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   margin-top: 4px;
 }
 
-/* הקנבס: המסגרת שבה התמונה מורכבת. שברים נעולים נשארים בה ולא זזים */
-.boss-canvas{
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-  border: 2px dashed rgba(255,255,255,0.28);
-  background: rgba(255,255,255,0.045);
-  box-sizing: border-box;
-}
-
 .shard-group.is-locked{
   cursor: default;
 }

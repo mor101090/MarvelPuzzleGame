@@ -7,7 +7,8 @@
 
 // בוס אחד לכל קבוצה של 10 שלבים. cols = כמה עמודות בסיס לחיתוך (השורות לפי יחס התמונה)
 const bosses = [
-  { id: "1", cols: 3 }
+  // seed: אותו מספר = אותם שברים ואותו פיזור בכל פעם, כדי שאפשר יהיה לשפר עם זיכרון
+  { id: "1", cols: 3, seed: 20261027 }
 ].map(b => ({
   ...b,
   image: `assets/bosses/${b.id}.webp`,
@@ -25,9 +26,7 @@ const SPLIT_PROBABILITY = 0.35;   // כמה מהתאים מתפצלים לשני
 const TAP_SLOP = 6;               // פיקסלים: פחות מזה = לחיצה (סיבוב), יותר = גרירה
 const SNAP_FACTOR = 0.28;         // טווח ההדבקה, ביחס לגודל תא
 const BLEED_PX = 0.6;             // שבר מורחב קצת כדי שלא יישארו קווים בין חלקים מאוחדים
-const BOSS_STAGE_FILL = 0.74;
-const BOSS_STAGE_WIDTH_FACTOR = 1.8;  // רוחב הבמה ביחס לרוחב התמונה (לכל היותר)
-const BOSS_STAGE_MIN_W = 420;         // אבל לא צרה מזה, כדי שיהיה מקום לפזר     // כמה מהבמה תופסת התמונה כשהיא מושלמת
+     // כמה מהבמה תופסת התמונה כשהיא מושלמת
 
 let boss = null;                  // מצב הבוס הפעיל
 let boss_loadToken = 0;           // מבטל טעינת תמונה ישנה כשעוברים בוס מהר
@@ -35,7 +34,19 @@ let boss_loadToken = 0;           // מבטל טעינת תמונה ישנה כ�
 // =====================
 // Geometry
 // =====================
-const rnd = (amount) => (Math.random() - 0.5) * 2 * amount;
+// מחולל מספרים קבוע לפי seed: הבוס נראה אותו דבר בכל פעם
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let bossRand = Math.random;
+const rnd = (amount) => (bossRand() - 0.5) * 2 * amount;
 
 // חותך את התמונה (x: 0..aspect, y: 0..1) לשברים משוננים שחולקים קצוות מדויקים
 function buildShards(cols, rows, aspect) {
@@ -77,8 +88,8 @@ function buildShards(cols, rows, aspect) {
       const tl = V[r][c], tr = V[r][c + 1], br = V[r + 1][c + 1], bl = V[r + 1][c];
       const top = H[r][c], bottom = H[r + 1][c], left = Vm[r][c], right = Vm[r][c + 1];
 
-      if (Math.random() < SPLIT_PROBABILITY) {
-        if (Math.random() < 0.5) {
+      if (bossRand() < SPLIT_PROBABILITY) {
+        if (bossRand() < 0.5) {
           const d = mid(tl, br, rnd(0.1 * cw), rnd(0.1 * ch));
           polys.push([tl, top, tr, right, br, d]);
           polys.push([br, bottom, bl, left, tl, d]);
@@ -166,12 +177,11 @@ function bossStageSize() {
 function layoutBossScale() {
   const avail = bossStageSize();
 
-  // S = גובה התמונה השלמה בפיקסלים, לפי המקום שיש
-  boss.S = Math.min(avail.h * BOSS_STAGE_FILL, (avail.w * BOSS_STAGE_FILL) / boss.aspect);
-
-  // הבמה לא נמתחת לכל רוחב המסך (למשל בלפטופ): רק מעט יותר מהתמונה, כדי שיהיה מקום לפזר שברים
-  boss.stageW = Math.min(avail.w, Math.max(Math.round(boss.aspect * boss.S * BOSS_STAGE_WIDTH_FACTOR), BOSS_STAGE_MIN_W));
-  boss.stageH = avail.h;
+  // הבמה (הריבוע השחור) היא בגודל התמונה ובדיוק בצורה שלה, והיא הגבול של הלוח.
+  // S = גובה התמונה השלמה בפיקסלים
+  boss.S = Math.min(avail.h, avail.w / boss.aspect);
+  boss.stageW = Math.round(boss.aspect * boss.S);
+  boss.stageH = Math.round(boss.S);
   bossStage.style.width = boss.stageW + "px";
   bossStage.style.height = boss.stageH + "px";
   const hud = bossWrap.querySelector(".boss-hud");
@@ -189,7 +199,7 @@ function stagePoint(g, u) {
   ];
 }
 
-// ה"קנבס": המסגרת שבה התמונה מורכבת, במרכז הבמה. הנקודה u של התמונה השלמה נמצאת כאן
+// ה"קנבס" הוא כל הבמה (הריבוע השחור): הנקודה u של התמונה השלמה נמצאת כאן
 function canvasPoint(u) {
   return [
     boss.stageW / 2 + (u[0] - boss.aspect / 2) * boss.S,
@@ -248,14 +258,6 @@ function applyGroupTransform(g, animate) {
 function renderBoss() {
   bossStage.innerHTML = "";
 
-  const frame = document.createElement("div");
-  frame.className = "boss-canvas";
-  frame.style.width = boss.aspect * boss.S + "px";
-  frame.style.height = boss.S + "px";
-  frame.style.left = (boss.stageW - boss.aspect * boss.S) / 2 + "px";
-  frame.style.top = (boss.stageH - boss.S) / 2 + "px";
-  bossStage.appendChild(frame);
-
   boss.groups.forEach(g => {
     g.el = document.createElement("div");
     g.el.className = "shard-group";
@@ -310,7 +312,7 @@ function scatterBoss() {
   const cells = [];
   for (let r = 0; r < gy; r++) for (let c = 0; c < gx; c++) cells.push([c, r]);
   for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(bossRand() * (i + 1));
     [cells[i], cells[j]] = [cells[j], cells[i]];
   }
   boss.groups.forEach((g, i) => {
@@ -321,7 +323,7 @@ function scatterBoss() {
     const mx = Math.min(0.45, radius / boss.stageW), my = Math.min(0.45, radius / boss.stageH);
     g.nx = Math.min(1 - mx, Math.max(mx, (c + 0.5 + rnd(0.3)) / gx));
     g.ny = Math.min(1 - my, Math.max(my, (r + 0.5 + rnd(0.3)) / gy));
-    g.rot = [0, 90, 180, 270][Math.floor(Math.random() * 4)];
+    g.rot = [0, 90, 180, 270][Math.floor(bossRand() * 4)];
   });
   // לפחות שבר אחד מסובב, כדי שלא יתחיל פתור
   if (boss.groups.every(g => g.rot === 0)) boss.groups[0].rot = 90;
@@ -401,12 +403,12 @@ function settleGroup(g) {
 // =====================
 // Stars by moves (לפי בוט שמשחק כמעט מושלם: ראו CHANGELOG)
 // =====================
-// נמדד: בוט שמשחק כמעט מושלם פותר ב-1.43 מהלכים לשבר (120 ניסיונות, כולם נפתרו).
-// בלי רשת לעזרה אדם צריך יותר, ולכן המרווחים כאן רחבים יותר משלבים רגילים:
-// 3 כוכבים עד כ-2.75 מהלכים לשבר, 2 כוכבים עד כ-4.4
+// נמדד: בוט שמשחק כמעט מושלם פותר ב-1.43 מהלכים לשבר, ושחקן שמניח כל שבר על הקנבס
+// צריך כ-2.5 (60 מתוך 60 לוחות נפתרו בשתי הדרכים). הלוח זהה בכל פעם, אז בהתחלה
+// נותנים מקום ללמוד אותו: 3 כוכבים עד כ-4.5 מהלכים לשבר, 2 כוכבים עד כ-6.5
 const BOSS_PAR_PER_PIECE = 1.45;
-const BOSS_STAR3_FACTOR = 1.9, BOSS_STAR3_SLACK = 3;
-const BOSS_STAR2_FACTOR = 3.0, BOSS_STAR2_SLACK = 5;
+const BOSS_STAR3_FACTOR = 3.0, BOSS_STAR3_SLACK = 4;
+const BOSS_STAR2_FACTOR = 4.5, BOSS_STAR2_SLACK = 6;
 
 function bossLimits() {
   const par = Math.round(boss.pieces.length * BOSS_PAR_PER_PIECE);
@@ -435,6 +437,7 @@ function updateBossHud() {
 function startBoss(index = 0) {
   const def = bosses[index];
   if (!def) return;
+  bossRand = mulberry32(def.seed);   // בכל התחלה: אותם שברים ואותו פיזור
 
   showGame();            // (מנקה בוס קודם דרך showScreen)
   setGameMode(true);

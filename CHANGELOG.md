@@ -4,6 +4,19 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.27.0] (`@@0.27.0`) - Boss: same board every time, whole stage is the canvas
+### Changed
+- **The boss board is the same every time.** The shards, their shapes, their
+  starting places and how each one is turned no longer change between attempts or
+  on Replay, so remembering the board helps you finish in fewer moves.
+- **The whole black square is the canvas.** The dashed frame is gone. The stage now
+  has exactly the shape and size of the picture, and a shard placed upright in its
+  right spot anywhere on it locks.
+- **Easier 3 stars in the boss:** 3 stars up to about 4.5 moves per shard (was
+  2.75) and 2 stars up to about 6.5 (was 4.4). Checked: placing every shard on the
+  canvas takes about 2.4 moves per shard and joining shards about 1.6, 60 of 60
+  boards solved both ways. Regular levels are unchanged.
+
 ## [0.26.0] (`b0ca120`) - Boss canvas, compact stage, no screen dragging
 ### Added
 - **A canvas in the boss level.** A faint dashed frame in the middle of the stage
