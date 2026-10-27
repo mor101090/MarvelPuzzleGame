@@ -28,6 +28,7 @@ const BLEED_PX = 0.6;             // שבר מורחב קצת כדי שלא יי
 const BOSS_STAGE_FILL = 0.74;     // כמה מהבמה תופסת התמונה כשהיא מושלמת
 
 let boss = null;                  // מצב הבוס הפעיל
+let boss_loadToken = 0;           // מבטל טעינת תמונה ישנה כשעוברים בוס מהר
 
 // =====================
 // Geometry
@@ -410,13 +411,11 @@ function startBoss(index = 0) {
   };
   img.src = def.image;
 }
-let boss_loadToken = 0;
-
 function replayBoss() {
   startBoss(boss ? boss.index : 0);
 }
 
-// נקרא כשעוזבים את מסך המשחק (מ-showScreen)
+// נקרא כשעוזבים את מסך המשחק (מ-showScreen דרך window.leaveBossHook)
 function leaveBoss() {
   boss_loadToken++;
   if (boss) {
@@ -579,3 +578,7 @@ window.addEventListener("resize", () => {
   clearTimeout(bossResizeTimer);
   bossResizeTimer = setTimeout(relayoutBoss, 250);
 });
+
+// רושמים את הניקוי רק בסוף הקובץ, אחרי שכל המשתנים כאן הוגדרו
+// (אחרת, כשכל הקבצים מחוברים לקובץ אחד, ניקוי מוקדם נוגע במשתנה שעוד לא הוגדר)
+window.leaveBossHook = leaveBoss;
