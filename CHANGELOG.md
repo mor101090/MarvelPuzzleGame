@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.27.0] (`@@0.27.0`) - Boss: same board every time, whole stage is the canvas
+## [0.27.0] (`2b86f98`) - Boss: same board every time, whole stage is the canvas
 ### Changed
 - **The boss board is the same every time.** The shards, their shapes, their
   starting places and how each one is turned no longer change between attempts or
