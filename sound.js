@@ -75,6 +75,10 @@ const SOUNDS = {
     tone(ctx, 600 + i * 160, 0, 0.2, { type: "triangle", gain: 0.14 });
     tone(ctx, 1200 + i * 320, 0.02, 0.14, { type: "sine", gain: 0.06 });
   },
+  rotate:  (ctx) => {
+    tone(ctx, 520, 0, 0.05, { type: "square", gain: 0.07 });
+    tone(ctx, 780, 0.04, 0.07, { type: "triangle", gain: 0.12, slideTo: 980 });
+  },
   invalid: (ctx) => tone(ctx, 180, 0, 0.16, { type: "sawtooth", gain: 0.06, slideTo: 120 }),
   // קונפטי: פיצוץ + קול "פופ" נמוך
   pop:     (ctx) => {

@@ -79,6 +79,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* ===== GAME ===== */
 .game{
+  grid-template-columns: minmax(0, 1fr); /* תוכן רחב (במה, לוח עם זום) לא מרחיב את כל המסך */
   background: #3a3637 url("assets/ui/comic_bg.png") center/cover no-repeat;
   color: #fff;
   align-content: start; /* הלוח צמוד למעלה ולא "צף" באמצע המסך */
@@ -859,4 +860,81 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   height: 100%;
   z-index: 9000;       /* מעל המשחק, מתחת לחלונות (ניצחון, הגדרות) */
   pointer-events: none;
+}
+
+/* ===== BOSS LEVEL ===== */
+#bossWrap{
+  display: none;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+}
+
+.game.boss-mode #puzzleWrap{
+  display: none;
+}
+
+.game.boss-mode #bossWrap{
+  display: flex;
+}
+
+.boss-hud{
+  width: 100%;
+  max-width: 600px;
+}
+
+#bossStage{
+  position: relative;
+  box-sizing: content-box;
+  overflow: hidden;
+  background: #141414;
+  border: 3px solid #ED1D24;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.shard-group{
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;           /* רק השברים עצמם תופסים לחיצה */
+  will-change: transform;
+  /* קו כהה סביב כל מה שמאוחד, בלי קווים בין חלקים שהתחברו */
+  filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 2px 3px rgba(0,0,0,0.45));
+}
+
+.shard-group.is-turning{
+  transition: transform 0.16s ease-out;
+}
+
+.shard-group.is-dragging{
+  filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 8px 10px rgba(0,0,0,0.6)) brightness(1.12);
+}
+
+.shard-group.flash{
+  animation: shard-flash 0.45s ease-out;
+}
+
+@keyframes shard-flash{
+  0%   { filter: drop-shadow(0 0 10px #ffc933) brightness(1.7); }
+  100% { filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 2px 3px rgba(0,0,0,0.45)); }
+}
+
+.shard{
+  position: absolute;
+  pointer-events: auto;
+  background-repeat: no-repeat;
+  cursor: grab;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .shard-group.is-turning{ transition: none; }
+  .shard-group.flash{ animation: none; }
+}
+
+#bossNextBtn{
+  margin-top: 4px;
 }
