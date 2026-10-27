@@ -350,7 +350,7 @@ function setGameMode(isBoss) {
 function showScreen(screen) {
   cancelDrag();
   stopConfetti();
-  if (typeof leaveBoss === "function") leaveBoss();
+  window.leaveBossHook?.();   // boss.js מגדיר אותו אחרי שהוא נטען
   closeWinScreen();
   closeViewer();
   [homeScreen, levelScreen, bossScreen, gameScreen].forEach(el => {
