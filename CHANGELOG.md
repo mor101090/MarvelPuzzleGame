@@ -4,6 +4,31 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.26.0] (`@@0.26.0`) - Boss canvas, compact stage, no screen dragging
+### Added
+- **A canvas in the boss level.** A faint dashed frame in the middle of the stage
+  shows where the picture is built. A shard (or a joined group) that is upright
+  and placed in its right spot on the canvas **snaps to it and locks**: it cannot
+  be grabbed, moved or rotated any more. Locked shards always stay **under** the
+  free ones, so the shards that are left are always on the top layer.
+- A free shard that is joined to a locked one becomes locked as well. Joining
+  shards to each other anywhere on the stage still works as before.
+- The boss is solved when everything is joined and upright (on the canvas or not).
+  The finished picture glides to the canvas, then the usual pause, confetti and
+  stars window.
+### Fixed
+- **Dragging a piece moved the whole screen** on the phone (the page scrolled or
+  stretched while dragging). Touch scrolling is now blocked while you drag and
+  while you touch the board or the boss stage, and the page no longer bounces.
+- **The boss stage was as wide as a laptop screen.** It now stays close to the
+  picture (about 1.8 times its width, at least 420 px), centered, with the top bar
+  matching its width. Phones are unchanged.
+### Notes
+- Stars: placing every shard on the canvas takes about 2.5 moves per shard and
+  joining shards to each other about 1.4 (60 of 60 random boards solved both
+  ways), so 3 stars (up to about 2.75 per shard) are within reach of the simple
+  way of playing.
+
 ## [0.25.1] (`52826eb`) - Fix for the demo page
 ### Fixed
 - **Play and Choose Level did nothing on the demo page** (the claude.ai link), while

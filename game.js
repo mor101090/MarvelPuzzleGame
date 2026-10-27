@@ -1153,6 +1153,14 @@ function cancelDrag() {
   dragPointerId = null;
 }
 
+// באייפון גרירה על המסך גוללת/מושכת את כל הדף גם כש-touch-action כבוי.
+// חוסמים את זה בזמן גרירת חלק, וכשנוגעים בלוח או בבמת הבוס.
+document.addEventListener("touchmove", (e) => {
+  const onBoard = e.target.closest?.("#bossStage, #boardViewport");
+  const dragging = dragGhost || pinch || window.isBossDragging?.();
+  if ((onBoard || dragging) && e.cancelable) e.preventDefault();
+}, { passive: false });
+
 // Global listeners
 document.addEventListener("pointermove", onPointerMove);
 document.addEventListener("pointerup", onPointerUp);
