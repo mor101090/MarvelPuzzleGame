@@ -128,7 +128,7 @@ let started = false;
 let loadToken = 0;
 
 // השהיה קצרה אחרי הניצחון כדי ליהנות מהתמונה המושלמת לפני מסך הניצחון
-const WIN_SCREEN_DELAY = 900;
+const WIN_SCREEN_DELAY = 3500;
 let winTimer = null;
 let winStarTimers = [];
 
@@ -137,17 +137,16 @@ let winStarTimers = [];
 // =====================
 const PROGRESS_KEY = "marvelPuzzle.progress";
 
-// level = { "9": 2 } - הרמה הגבוהה ביותר שנפתרה בכל שלב (0 = עוד לא נפתר)
-// שלב N = assets/levels/N.webp. השלבים הקיימים נשארים במקומם והחדשים נוספים אחריהם.
-// שמירות ישנות: version 1 לפי אינדקס, 2 לפי id עם כוכבי מהלכים, 3 ו-5 לפי מספר שלב
-// (אותו מספור), ו-4 לפי שם קובץ התמונה (נוצר לרגע בגרסה 0.21.0 ובוטל).
+// שלב N = assets/levels/N.webp = התמונה level<N> מהקבצים המקוריים (סדר השלבים = סדר השמות).
+// שמירות ישנות: version 1 לפי אינדקס, 2 לפי id עם כוכבי מהלכים, 3 ו-5 לפי מספר שלב בסדר הקודם,
+// 4 לפי שם הקובץ (כבר הסדר הנוכחי), 6 כוכבים לכל רמה בסדר הקודם, 7 (הנוכחי) בסדר השמות.
 const LEGACY_IDS = ["9", "10"];                    // השלבים הראשונים בשמירה לפי אינדקס
 const RENAMED_IDS = { level3: "9", level4: "10" }; // שלבים ששינינו להם שם (לפני version 3)
 const renameId = (id) => RENAMED_IDS[id] || id;
 
-// שם קובץ התמונה המקורי של כל שלב (שלב N = ORDER[N-1]) - להמרת שמירות version 4
-const V4_ORDER = [1, 5, 2, 14, 11, 10, 26, 19, 3, 4, 6, 7, 8, 9, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30];
-const fromV4Id = (id) => String(V4_ORDER.indexOf(Number(id)) + 1);
+// הסדר הקודם (שלב N = תמונה PREVIOUS_ORDER[N-1]) - כדי להעביר שמירות לסדר השמות
+const PREVIOUS_ORDER = [1, 5, 2, 14, 11, 10, 26, 19, 3, 4, 6, 7, 8, 9, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30];
+const fromPreviousId = (id) => String(PREVIOUS_ORDER[Number(id) - 1] || id);
 
 // stars = { "9": [3, 2, 0] } - כוכבים (1-3, לפי מספר המהלכים) בכל רמה: קל, בינוני, קשה (0 = עוד לא נפתרה)
 const progress = { stars: {}, ...loadProgress() };
@@ -163,20 +162,26 @@ function loadProgress() {
       const current = stars[id] || [0, 0, 0];
       stars[id] = current.map((v, i) => Math.max(v, perDifficulty[i] || 0));
     };
+    // רמות עד הרמה הגבוהה ביותר שנפתרה נחשבות כנפתרו עם כוכב אחד
+    const fromLevel = (id, topDifficulty) =>
+      add(id, [0, 1, 2].map(i => (i < topDifficulty ? 1 : 0)));
 
-    // version 6 (הנוכחי): כוכבים לכל רמה
-    if (saved.version === 6 && saved.stars && typeof saved.stars === "object") {
+    // version 7 (הנוכחי): כוכבים לכל רמה, לפי סדר השמות
+    if (saved.version === 7 && saved.stars && typeof saved.stars === "object") {
       Object.entries(saved.stars).forEach(([id, list]) => add(id, list));
       return { stars };
     }
 
-    // גרסאות 3-5: הרמה הגבוהה ביותר שנפתרה. כל רמה עד אליה נחשבת כנפתרה עם כוכב אחד
-    const fromLevel = (id, topDifficulty) =>
-      add(id, [0, 1, 2].map(i => (i < topDifficulty ? 1 : 0)));
+    // version 6: כוכבים לכל רמה, בסדר הקודם
+    if (saved.version === 6 && saved.stars && typeof saved.stars === "object") {
+      Object.entries(saved.stars).forEach(([id, list]) => add(fromPreviousId(id), list));
+      return { stars };
+    }
 
     if (saved.level && typeof saved.level === "object" && [3, 4, 5].includes(saved.version)) {
       Object.entries(saved.level).forEach(([id, top]) => {
-        fromLevel(saved.version === 4 ? fromV4Id(id) : renameId(id), top);
+        // 4 כבר לפי שם הקובץ; 3 ו-5 בסדר הקודם
+        fromLevel(saved.version === 4 ? id : fromPreviousId(renameId(id)), top);
       });
       return { stars };
     }
@@ -185,7 +190,7 @@ function loadProgress() {
     if (Array.isArray(saved.completed)) {
       const legacy = !saved.version;
       saved.completed.forEach(key => {
-        fromLevel(renameId((legacy && LEGACY_IDS[key]) || String(key)), 1);
+        fromLevel(fromPreviousId(renameId((legacy && LEGACY_IDS[key]) || String(key))), 1);
       });
       return { stars };
     }
@@ -197,7 +202,7 @@ function loadProgress() {
 
 function saveProgress() {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 6, ...progress }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ version: 7, ...progress }));
   } catch {
     // אחסון חסום - ההתקדמות תחזיק עד רענון
   }
@@ -336,6 +341,7 @@ function nextPlayableLevel() {
 // =====================
 function showScreen(screen) {
   cancelDrag();
+  stopConfetti();
   closeWinScreen();
   closeViewer();
   [homeScreen, levelScreen, bossScreen, gameScreen].forEach(el => {
@@ -583,6 +589,7 @@ function loadLevel(index, difficulty = 1) {
   gameOver = false;
   zoom = 1;
   moves = 0;
+  stopConfetti();
   updateHud();
   closeWinScreen();
   cancelDrag();
@@ -1148,9 +1155,124 @@ function checkWin() {
 
   playSound("win");
   vibrate([40, 60, 40, 60, 120]);
+  startConfetti();
 
   clearTimeout(winTimer);
   winTimer = setTimeout(() => openWinScreen(earned), WIN_SCREEN_DELAY);
+}
+
+// =====================
+// Confetti (מעופף באוויר בזמן שנהנים מהפאזל המושלם)
+// =====================
+const CONFETTI_COLORS = ["#ED1D24", "#ffc933", "#ffffff", "#2a7fff", "#ff6a00", "#33d17a"];
+const CONFETTI_BURSTS = [0, 650, 1300]; // תואם לשלושת הפיצוצים בצליל
+const CONFETTI_MS = 3500;
+
+let confettiCanvas = null;
+let confettiFrame = null;
+let confettiTimers = [];
+let confettiPieces = [];
+let confettiLast = 0;
+
+function startConfetti() {
+  stopConfetti();
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+  confettiCanvas = document.createElement("canvas");
+  confettiCanvas.className = "confetti-canvas";
+  const dpr = window.devicePixelRatio || 1;
+  confettiCanvas.width = Math.round(window.innerWidth * dpr);
+  confettiCanvas.height = Math.round(window.innerHeight * dpr);
+  document.body.appendChild(confettiCanvas);
+
+  // כל פיצוץ יורה משני צדי המסך כלפי מעלה ופנימה, ועוד גשם קל מלמעלה
+  CONFETTI_BURSTS.forEach(delay => {
+    confettiTimers.push(setTimeout(() => confettiBurst(), delay));
+  });
+  confettiTimers.push(setTimeout(stopConfetti, CONFETTI_MS + 2500));
+
+  confettiLast = performance.now();
+  confettiFrame = requestAnimationFrame(confettiStep);
+}
+
+function confettiBurst() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const count = Math.min(70, Math.round(w / 8));
+  for (let i = 0; i < count; i++) {
+    const fromLeft = i % 2 === 0;
+    const angle = (fromLeft ? -60 : -120) + (Math.random() - 0.5) * 40; // מעלות
+    const speed = h * (0.9 + Math.random() * 0.8);                     // פיקסלים בשנייה
+    confettiPieces.push({
+      x: fromLeft ? 0 : w,
+      y: h * 0.85,
+      vx: Math.cos(angle * Math.PI / 180) * speed,
+      vy: Math.sin(angle * Math.PI / 180) * speed,
+      size: 6 + Math.random() * 7,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 12,
+      flip: Math.random() * Math.PI * 2,   // סיבוב כמו פיסת נייר מתהפכת
+      life: 0
+    });
+  }
+  // גשם קל מלמעלה
+  for (let i = 0; i < count / 2; i++) {
+    confettiPieces.push({
+      x: Math.random() * w, y: -20, vx: (Math.random() - 0.5) * 80, vy: 40 + Math.random() * 120,
+      size: 6 + Math.random() * 6,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 8,
+      flip: Math.random() * Math.PI * 2, life: 0
+    });
+  }
+}
+
+function confettiStep(now) {
+  if (!confettiCanvas) return;
+  const dt = Math.min(0.05, (now - confettiLast) / 1000);
+  confettiLast = now;
+
+  const ctx = confettiCanvas.getContext("2d");
+  const dpr = confettiCanvas.width / window.innerWidth;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+  confettiPieces = confettiPieces.filter(p => p.y < window.innerHeight + 30 && p.life < 6);
+  confettiPieces.forEach(p => {
+    p.life += dt;
+    p.vy += 900 * dt;                      // כוח המשיכה
+    p.vx *= 1 - 0.8 * dt;                  // התנגדות האוויר
+    p.vy *= 1 - 0.5 * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.rot += p.vr * dt;
+    p.flip += 6 * dt;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.scale(1, Math.cos(p.flip));        // הופך את החתיכה כמו נייר באוויר
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = Math.min(1, (6 - p.life) / 1.5);
+    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+    ctx.restore();
+  });
+
+  if (confettiPieces.length || confettiTimers.length) {
+    confettiFrame = requestAnimationFrame(confettiStep);
+  } else {
+    stopConfetti();
+  }
+}
+
+function stopConfetti() {
+  confettiTimers.forEach(clearTimeout);
+  confettiTimers = [];
+  cancelAnimationFrame(confettiFrame);
+  confettiFrame = null;
+  confettiPieces = [];
+  confettiCanvas?.remove();
+  confettiCanvas = null;
 }
 
 // =====================
