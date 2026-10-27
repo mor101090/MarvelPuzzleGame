@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.25.0] (`@@0.25.0`) - Boss 1: The Mortal Thor
+## [0.25.0] (`cc42ab1`) - Boss 1: The Mortal Thor
 ### Added
 - **The first boss level** ("The Mortal Thor"), opened from the Boss screen. It is
   a different kind of puzzle:
