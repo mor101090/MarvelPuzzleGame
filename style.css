@@ -887,6 +887,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 #bossStage{
   position: relative;
+  isolation: isolate;
   box-sizing: content-box;
   overflow: hidden;
   background: #141414;
@@ -937,4 +938,35 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 #bossNextBtn{
   margin-top: 4px;
+}
+
+/* הקנבס: המסגרת שבה התמונה מורכבת. שברים נעולים נשארים בה ולא זזים */
+.boss-canvas{
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border: 2px dashed rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.045);
+  box-sizing: border-box;
+}
+
+.shard-group.is-locked{
+  cursor: default;
+}
+
+.shard-group.is-locked .shard{
+  pointer-events: none;     /* אי אפשר לתפוס או לסובב שבר נעול */
+  cursor: default;
+}
+
+/* בלי גלילה או "משיכה" של כל המסך בזמן גרירה (בעיקר באייפון) */
+html, body{
+  overscroll-behavior: none;
+}
+
+.shard, .tile{
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }

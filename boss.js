@@ -25,7 +25,9 @@ const SPLIT_PROBABILITY = 0.35;   // כמה מהתאים מתפצלים לשני
 const TAP_SLOP = 6;               // פיקסלים: פחות מזה = לחיצה (סיבוב), יותר = גרירה
 const SNAP_FACTOR = 0.28;         // טווח ההדבקה, ביחס לגודל תא
 const BLEED_PX = 0.6;             // שבר מורחב קצת כדי שלא יישארו קווים בין חלקים מאוחדים
-const BOSS_STAGE_FILL = 0.74;     // כמה מהבמה תופסת התמונה כשהיא מושלמת
+const BOSS_STAGE_FILL = 0.74;
+const BOSS_STAGE_WIDTH_FACTOR = 1.8;  // רוחב הבמה ביחס לרוחב התמונה (לכל היותר)
+const BOSS_STAGE_MIN_W = 420;         // אבל לא צרה מזה, כדי שיהיה מקום לפזר     // כמה מהבמה תופסת התמונה כשהיא מושלמת
 
 let boss = null;                  // מצב הבוס הפעיל
 let boss_loadToken = 0;           // מבטל טעינת תמונה ישנה כשעוברים בוס מהר
@@ -162,13 +164,18 @@ function bossStageSize() {
 }
 
 function layoutBossScale() {
-  const { w, h } = bossStageSize();
-  boss.stageW = w;
-  boss.stageH = h;
-  // S = גובה התמונה השלמה בפיקסלים
-  boss.S = Math.min(h * BOSS_STAGE_FILL, (w * BOSS_STAGE_FILL) / boss.aspect);
-  bossStage.style.width = w + "px";
-  bossStage.style.height = h + "px";
+  const avail = bossStageSize();
+
+  // S = גובה התמונה השלמה בפיקסלים, לפי המקום שיש
+  boss.S = Math.min(avail.h * BOSS_STAGE_FILL, (avail.w * BOSS_STAGE_FILL) / boss.aspect);
+
+  // הבמה לא נמתחת לכל רוחב המסך (למשל בלפטופ): רק מעט יותר מהתמונה, כדי שיהיה מקום לפזר שברים
+  boss.stageW = Math.min(avail.w, Math.max(Math.round(boss.aspect * boss.S * BOSS_STAGE_WIDTH_FACTOR), BOSS_STAGE_MIN_W));
+  boss.stageH = avail.h;
+  bossStage.style.width = boss.stageW + "px";
+  bossStage.style.height = boss.stageH + "px";
+  const hud = bossWrap.querySelector(".boss-hud");
+  if (hud) hud.style.width = Math.max(boss.stageW + 6, 280) + "px";
 }
 
 // נקודת הבמה (בפיקסלים) של נקודה u בקואורדינטות התמונה, בהינתן מצב הקבוצה
@@ -180,6 +187,25 @@ function stagePoint(g, u) {
     g.nx * boss.stageW + dx * Math.cos(a) - dy * Math.sin(a),
     g.ny * boss.stageH + dx * Math.sin(a) + dy * Math.cos(a)
   ];
+}
+
+// ה"קנבס": המסגרת שבה התמונה מורכבת, במרכז הבמה. הנקודה u של התמונה השלמה נמצאת כאן
+function canvasPoint(u) {
+  return [
+    boss.stageW / 2 + (u[0] - boss.aspect / 2) * boss.S,
+    boss.stageH / 2 + (u[1] - 0.5) * boss.S
+  ];
+}
+
+function snapTolerance() {
+  return Math.max(12, SNAP_FACTOR * boss.cell * boss.S);
+}
+
+// כמה הקבוצה רחוקה ממקומה על הקנבס (נבדק לפי שבר אחד, כי הקבוצה קשיחה)
+function canvasOffset(g) {
+  const c = [boss.pieces[g.pieces[0]].cx, boss.pieces[g.pieces[0]].cy];
+  const a = stagePoint(g, c), t = canvasPoint(c);
+  return { dx: t[0] - a[0], dy: t[1] - a[1], dist: Math.hypot(t[0] - a[0], t[1] - a[1]) };
 }
 
 function makePieceEl(p) {
@@ -214,12 +240,22 @@ function applyGroupTransform(g, animate) {
   g.el.style.transformOrigin = `${px}px ${py}px`;
   g.el.style.transform =
     `translate(${g.nx * boss.stageW - px}px, ${g.ny * boss.stageH - py}px) rotate(${g.rot}deg)`;
-  g.el.style.zIndex = g.z;
+  g.el.style.zIndex = g.locked ? 0 : g.z;
+  g.el.classList.toggle("is-locked", !!g.locked);
 }
 
 // בונה מחדש את כל ה-DOM מהמודל (בהתחלה ובשינוי גודל המסך)
 function renderBoss() {
   bossStage.innerHTML = "";
+
+  const frame = document.createElement("div");
+  frame.className = "boss-canvas";
+  frame.style.width = boss.aspect * boss.S + "px";
+  frame.style.height = boss.S + "px";
+  frame.style.left = (boss.stageW - boss.aspect * boss.S) / 2 + "px";
+  frame.style.top = (boss.stageH - boss.S) / 2 + "px";
+  bossStage.appendChild(frame);
+
   boss.groups.forEach(g => {
     g.el = document.createElement("div");
     g.el.className = "shard-group";
@@ -248,7 +284,10 @@ function groupCentroid(g) {
 }
 
 function newGroup(pieceIds) {
-  const g = { id: boss.nextGroupId++, pieces: pieceIds, nx: 0.5, ny: 0.5, rot: 0, pivot: [0, 0], z: ++boss.zTop, el: null };
+  const g = {
+    id: boss.nextGroupId++, pieces: pieceIds, nx: 0.5, ny: 0.5, rot: 0, pivot: [0, 0],
+    z: ++boss.zTop, locked: false, el: null
+  };
   g.pivot = groupCentroid(g);
   pieceIds.forEach(id => { boss.pieces[id].group = g; });
   return g;
@@ -290,7 +329,7 @@ function scatterBoss() {
 
 // האם הקבוצה g יכולה להתאחד עם שכנה כרגע? מחזיר את השכנה והסטייה הנדרשת
 function findMerge(g) {
-  const tol = Math.max(12, SNAP_FACTOR * boss.cell * boss.S);
+  const tol = snapTolerance();
   for (const id of g.pieces) {
     for (const nb of boss.pieces[id].neighbors) {
       const h = boss.pieces[nb.id].group;
@@ -312,31 +351,51 @@ function mergeGroups(g, h, dx, dy) {
     p.group = h;
     h.el.appendChild(p.el);
   });
+  h.locked = h.locked || g.locked;
   g.el.remove();
   boss.groups = boss.groups.filter(x => x !== g);
   recenterPivot(h);
   applyGroupTransform(h, false);
 }
 
+// שבר (או קבוצה) שמונח נכון על הקנבס, בלי סיבוב, ננעל במקומו
+function tryLock(g) {
+  if (g.locked || ((g.rot % 360) + 360) % 360 !== 0) return false;
+  const off = canvasOffset(g);
+  if (off.dist > snapTolerance()) return false;
+  g.nx += off.dx / boss.stageW;
+  g.ny += off.dy / boss.stageH;
+  g.locked = true;
+  g.el.classList.remove("is-dragging");
+  applyGroupTransform(g, false);
+  return true;
+}
+
 // מאחד כל מה שאפשר סביב g. מחזיר את הקבוצה שהתקבלה, ואם הייתה הדבקה
 function settleGroup(g) {
-  let merged = false;
+  let merged = false, locked = false;
   for (let guard = 0; guard < 64; guard++) {
     const m = findMerge(g);
-    if (!m) break;
-    // הקבוצה הגדולה נשארת במקומה והקטנה מתיישרת אליה
-    const [keep, join, dx, dy] = g.pieces.length >= m.h.pieces.length
-      ? [g, m.h, -m.dx, -m.dy]
-      : [m.h, g, m.dx, m.dy];
-    mergeGroups(join, keep, dx, dy);
-    g = keep;
-    merged = true;
+    if (m) {
+      // קבוצה נעולה נשארת במקומה; אחרת הגדולה נשארת והקטנה מתיישרת אליה
+      const keepG = g.locked !== m.h.locked ? g.locked : g.pieces.length >= m.h.pieces.length;
+      const [keep, join, dx, dy] = keepG ? [g, m.h, -m.dx, -m.dy] : [m.h, g, m.dx, m.dy];
+      mergeGroups(join, keep, dx, dy);
+      g = keep;
+      merged = true;
+      continue;
+    }
+    if (tryLock(g)) {
+      locked = true;
+      continue;
+    }
+    break;
   }
-  if (merged) {
+  if (merged || locked) {
     g.el.classList.add("flash");
     setTimeout(() => g.el.classList.remove("flash"), 450);
   }
-  return { group: g, merged };
+  return { group: g, merged: merged || locked, locked };
 }
 
 // =====================
@@ -391,7 +450,7 @@ function startBoss(index = 0) {
     boss = {
       def, index, aspect,
       pieces: model.pieces, cell: model.cell,
-      groups: [], moves: 0, done: false, zTop: 0, nextGroupId: 1,
+      groups: [], moves: 0, done: false, zTop: 10, nextGroupId: 1,
       stageW: 0, stageH: 0, S: 0, drag: null
     };
     boss.groups = boss.pieces.map(p => newGroup([p.id]));
@@ -400,7 +459,7 @@ function startBoss(index = 0) {
     // מפזרים עד שאין הדבקה מקרית כבר בהתחלה
     for (let attempt = 0; attempt < 30; attempt++) {
       scatterBoss();
-      if (!boss.groups.some(g => findMerge(g))) break;
+      if (!boss.groups.some(g => findMerge(g) || (g.rot % 360 === 0 && canvasOffset(g).dist <= snapTolerance()))) break;
     }
     renderBoss();
     updateBossHud();
@@ -437,6 +496,7 @@ bossStage.addEventListener("pointerdown", (e) => {
   e.preventDefault();
 
   const g = boss.pieces[+el.dataset.piece].group;
+  if (g.locked) return;
   g.z = ++boss.zTop;
   g.el.style.zIndex = g.z;
   g.el.classList.add("is-dragging");
@@ -511,6 +571,7 @@ document.addEventListener("pointercancel", (e) => finishBossDrag(e, true));
 // =====================
 function checkBossWin(g) {
   if (!boss || boss.done || boss.groups.length !== 1) return;
+  g = boss.groups[0];
   if (((g.rot % 360) + 360) % 360 !== 0) return;   // צריך גם להעמיד את התמונה ישר
 
   boss.done = true;
@@ -521,11 +582,12 @@ function checkBossWin(g) {
     saveProgress();
   }
 
-  // התמונה המושלמת נעה למרכז הבמה בזמן שנהנים ממנה
-  boss.groups[0].nx = 0.5;
-  boss.groups[0].ny = 0.5;
-  boss.groups[0].el.classList.add("is-turning");
-  applyGroupTransform(boss.groups[0], true);
+  // התמונה המושלמת גולשת למקומה על הקנבס, במרכז הבמה, בזמן שנהנים ממנה
+  const done = boss.groups[0];
+  const off = canvasOffset(done);
+  done.nx += off.dx / boss.stageW;
+  done.ny += off.dy / boss.stageH;
+  applyGroupTransform(done, true);
 
   playSound("win");
   vibrate([40, 60, 40, 60, 120]);
@@ -582,3 +644,4 @@ window.addEventListener("resize", () => {
 // רושמים את הניקוי רק בסוף הקובץ, אחרי שכל המשתנים כאן הוגדרו
 // (אחרת, כשכל הקבצים מחוברים לקובץ אחד, ניקוי מוקדם נוגע במשתנה שעוד לא הוגדר)
 window.leaveBossHook = leaveBoss;
+window.isBossDragging = () => !!(boss && boss.drag);
