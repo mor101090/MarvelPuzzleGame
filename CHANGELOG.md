@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.28.0] (`@@0.28.0`) - Responsive pass, zoom frame, sharper pictures, cleanup
+## [0.28.0] (`bc2e106`) - Responsive pass, zoom frame, sharper pictures, cleanup
 ### Fixed
 - **Very narrow phones (320 px):** the Choose Level screen was wider than the
   screen (the Boss button was cut off and the cards ran off the edge). The header is
