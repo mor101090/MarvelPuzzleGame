@@ -14,7 +14,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* ===== HOME ===== */
 .home {
-  background: url("assets/ui/comic_bg.png") center/cover no-repeat;
+  background: url("assets/ui/comic_bg.webp") center/cover no-repeat;
   position: relative;
 }
 
@@ -80,7 +80,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 /* ===== GAME ===== */
 .game{
   grid-template-columns: minmax(0, 1fr); /* תוכן רחב (במה, לוח עם זום) לא מרחיב את כל המסך */
-  background: #3a3637 url("assets/ui/comic_bg.png") center/cover no-repeat;
+  background: #3a3637 url("assets/ui/comic_bg.webp") center/cover no-repeat;
   color: #fff;
   align-content: start; /* הלוח צמוד למעלה ולא "צף" באמצע המסך */
 }
@@ -311,7 +311,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 /* ===== LEVEL SELECT ===== */
 .levels{
   grid-template-columns: minmax(0, 1fr); /* תוכן רחב לא מרחיב את כל הדף */
-  background: #3a3637 url("assets/ui/comic_bg.png") center/cover no-repeat;
+  background: #3a3637 url("assets/ui/comic_bg.webp") center/cover no-repeat;
   color: #fff;
   align-content: start;
 }

@@ -186,7 +186,7 @@ const MUSIC_TRACKS = { main: "assets/audio/motif_hero.mp3", boss: "assets/audio/
 const music = new Audio(MUSIC_TRACKS.main);
 music.loop = true;
 music.volume = MUSIC_VOLUME;
-music.preload = "auto";
+music.preload = "none";   // לא מורידים את המוזיקה לפני שהשחקן נוגע במסך
 
 let musicUnlocked = false;
 let musicRouted = false;
