@@ -63,6 +63,12 @@ document.querySelectorAll("[data-open-settings]").forEach(btn => {
 
 document.getElementById("closeSettingsBtn")?.addEventListener("click", closeSettings);
 
+// מחזיר את המדריכים הקצרים, כדי לראות אותם שוב
+document.getElementById("resetTipsBtn")?.addEventListener("click", (e) => {
+  window.tutorialHook?.reset();
+  e.currentTarget.textContent = "Tips will show again";
+});
+
 // לחיצה על הרקע הכהה סוגרת
 settingsModal?.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettings();

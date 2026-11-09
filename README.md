@@ -33,3 +33,9 @@ Quick alternative for a single bad change: on GitHub open the merged pull reques
    (the boss list matches the groups in `game.js`: Rookie, Hero, Avenger, ...). `cols` is the number
    of columns the picture is cut into; the number of rows follows from the picture shape.
 3. Add an entry to `CHANGELOG.md`.
+
+
+## Tips
+
+Short tips (`tutorial.js`) show once each and are remembered on the device (`marvelPuzzle.tips`).
+The text of every tip is in the `TIPS` list at the top of `tutorial.js`. Settings has a "Show tips again" button.

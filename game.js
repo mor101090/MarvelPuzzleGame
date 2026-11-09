@@ -365,8 +365,9 @@ function showHome() {
   showScreen(homeScreen);
 }
 
-function showBoss() {
-  renderBossSelect();
+// reveal = מספר הבוס שנפתח עכשיו (אחרי סיום הקבוצה שלו): מנגנים את אנימציית המנעול
+function showBoss(reveal = -1) {
+  renderBossSelect(reveal);
   showScreen(bossScreen);
 }
 
@@ -511,7 +512,7 @@ function isBossUnlocked(index) {
   return group.length > 0 && group.every(level => isCompleted(levels.indexOf(level)));
 }
 
-function renderBossSelect() {
+function renderBossSelect(reveal = -1) {
   bossList.innerHTML = "";
 
   const section = document.createElement("section");
@@ -538,6 +539,7 @@ function renderBossSelect() {
         `<span class="stars">${starsHtml(stars)}</span></span>`;
       card.setAttribute("aria-label", `Boss ${index + 1}, ${stars} of 3 stars`);
       card.addEventListener("click", () => startBoss(index));
+      if (index === reveal) window.tutorialHook?.bossReveal(card);
     } else {
       card.className = "level-card is-locked";
       card.setAttribute("aria-label", `Boss ${index + 1}, ${category.name}, coming soon`);
@@ -647,6 +649,7 @@ function loadLevel(index, difficulty = 1) {
     shuffleTiles();
     renderTiles();
     layoutPuzzle();
+    window.tutorialHook?.levelStarted(imageAspect);
   };
 
   img.onerror = () => {
@@ -1324,6 +1327,17 @@ function isLastLevel() {
   return currentLevelIndex >= levels.length - 1;
 }
 
+// בסוף כל קבוצה של 10 שלבים יש בוס. אם יש בוס כזה, אחרי השלב עוברים אליו
+function bossAfterLevel(index) {
+  const group = (index + 1) / LEVELS_PER_GROUP - 1;
+  return Number.isInteger(group) && typeof bosses !== "undefined" && bosses[group] ? group : -1;
+}
+
+function nextButtonLabel() {
+  if (bossAfterLevel(currentLevelIndex) >= 0) return "BOSS";
+  return isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+}
+
 // הרמה הבאה באותו שלב (אם יש), אחרי שהנוכחית נפתרה
 function nextDifficulty() {
   return currentDifficulty < DIFFICULTIES.length ? currentDifficulty + 1 : 0;
@@ -1339,7 +1353,7 @@ function openWinScreen(stars) {
     `<span>${DIFFICULTIES[currentDifficulty - 1].name.toUpperCase()}</span>` +
     `<span>MOVES <b>${moves}</b></span>` +
     (stars < 3 ? `<span class="win-hint">${stars === 2 ? "3" : "2"} STARS: ${stars === 2 ? three : two} OR FEWER</span>` : "");
-  winNextBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+  winNextBtn.textContent = nextButtonLabel();
 
   // כפתור לרמה הקשה יותר (מופיע רק אם יש רמה הבאה)
   winHarderBtn.classList.toggle("hidden", !harder);
@@ -1366,7 +1380,10 @@ function closeWinScreen() {
 }
 
 function goNext() {
-  if (bossMode) {
+  const boss = bossMode ? -1 : bossAfterLevel(currentLevelIndex);
+  if (boss >= 0) {
+    showBoss(boss);          // האנימציה והמדריך של הבוס מופיעים בפעם הראשונה
+  } else if (bossMode) {
     showBoss();
   } else if (isLastLevel()) {
     showLevels();
@@ -1393,7 +1410,7 @@ winModal?.addEventListener("click", (e) => {
     winMessage.style.display = "block";
   }
   if (nextLevelBtn) {
-    nextLevelBtn.textContent = isLastLevel() ? "LEVELS" : "NEXT LEVEL";
+    nextLevelBtn.textContent = nextButtonLabel();
     nextLevelBtn.style.display = "inline-block";
   }
 });
