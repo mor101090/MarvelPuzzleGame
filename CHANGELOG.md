@@ -4,6 +4,31 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.28.0] (`@@0.28.0`) - Responsive pass, zoom frame, sharper pictures, cleanup
+### Fixed
+- **Very narrow phones (320 px):** the Choose Level screen was wider than the
+  screen (the Boss button was cut off and the cards ran off the edge). The header is
+  smaller on narrow screens and the page no longer stretches. The game top bar also
+  fit by 2 px too little, now fixed.
+- **Small phones held sideways:** `MOVES 0` was split into two lines.
+### Changed
+- **Zoom now grows the whole frame.** The red frame grows and shrinks together
+  with the pieces, up to the size of the free space on the screen. Beyond that, the
+  frame scrolls inside the screen (two fingers, mouse wheel or scroll bars). The
+  buttons and the rest of the page never change size.
+- **Sharper zoom:** the pictures are stored at up to 1800 px on the long side (was
+  1200), so zooming in stays crisp. 22 of the 30 originals were larger than 1200 px.
+  Total size of the level pictures is 5.4 MB, a level loads 100 to 350 KB.
+### Removed
+- Dead code: the old `swapTiles` function (replaced by group moves) and an unused
+  `new-best` style.
+### Checked
+- Every screen on phone portrait, phone landscape, small phone, tablet, laptop and
+  a wide monitor: no horizontal overflow and no cut-off buttons.
+- A smoke test of every flow (settings, play, win, harder, replay, level picker,
+  zoom, leaving in the middle of a drag, boss, win, resize) on phone and laptop:
+  no page errors, console errors or failed requests.
+
 ## [0.27.0] (`2b86f98`) - Boss: same board every time, whole stage is the canvas
 ### Changed
 - **The boss board is the same every time.** The shards, their shapes, their

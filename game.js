@@ -2,7 +2,8 @@
 // DOM
 // =====================
 const puzzle = document.getElementById("puzzle");
-const boardViewport = document.getElementById("boardViewport");
+const boardViewport = document.getElementById("boardViewport");   // המסגרת האדומה (גדלה עם הזום)
+const boardScroller = document.getElementById("boardScroller");   // חלון שגולל כשהמסגרת גדולה מהמסך
 const puzzleWrap = document.getElementById("puzzleWrap");
 const hud = document.querySelector(".hud");
 const zoomInBtn = document.getElementById("zoomInBtn");
@@ -120,6 +121,8 @@ let puzzleWidth = 0;   // גודל הלוח בפועל (כולל זום)
 let puzzleHeight = 0;
 let baseWidth = 0;     // גודל הלוח בלי זום (מה שנכנס במסך)
 let baseHeight = 0;
+let boardScrollMaxW = 0;   // הגודל המקסימלי של חלון הלוח (המקום הפנוי במסך)
+let boardScrollMaxH = 0;
 
 // Navigation
 let started = false;
@@ -665,7 +668,7 @@ function layoutPuzzle() {
   const wrapStyle = getComputedStyle(puzzleWrap);
   const availW = puzzleWrap.clientWidth
     - parseFloat(wrapStyle.paddingLeft) - parseFloat(wrapStyle.paddingRight) - 2 * boardBorder;
-  const top = boardViewport.getBoundingClientRect().top + window.scrollY;
+  const top = boardScroller.getBoundingClientRect().top + window.scrollY;
   const availH = window.innerHeight - top - boardBottomGap - 2 * boardBorder;
 
   const maxW = Math.max(120, Math.min(availW, maxPuzzleSize));
@@ -679,8 +682,9 @@ function layoutPuzzle() {
     baseHeight = maxW / imageAspect;
   }
 
-  boardViewport.style.width = baseWidth + "px";
-  boardViewport.style.height = baseHeight + "px";
+  // המקסימום שהחלון יכול לתפוס: כל המקום הפנוי במסך (גם מעבר לגודל הרגיל של הלוח)
+  boardScrollMaxW = availW + 2 * boardBorder;
+  boardScrollMaxH = Math.max(160, availH) + 2 * boardBorder;
   boardViewport.style.border = `${boardBorder}px solid #ED1D24`;
   if (hud) hud.style.width = Math.max(baseWidth + 2 * boardBorder, 280) + "px";
 
@@ -694,6 +698,12 @@ function sizeBoard() {
 
   const tileWidth = puzzleWidth / cols;
   const tileHeight = puzzleHeight / rows;
+
+  // המסגרת גדלה ומתכווצת יחד עם החלקים. החלון שמסביבה לא יוצא מהמסך וגולל במקום
+  boardViewport.style.width = puzzleWidth + "px";
+  boardViewport.style.height = puzzleHeight + "px";
+  boardScroller.style.width = Math.min(puzzleWidth + 2 * boardBorder, boardScrollMaxW) + "px";
+  boardScroller.style.height = Math.min(puzzleHeight + 2 * boardBorder, boardScrollMaxH) + "px";
 
   puzzle.style.width = puzzleWidth + "px";
   puzzle.style.height = puzzleHeight + "px";
@@ -721,13 +731,13 @@ function sizeBoard() {
 // =====================
 // מחשב נקודה במסך לקואורדינטות בתוך הלוח (בלי זום)
 function boardPointAt(clientX, clientY) {
-  const rect = boardViewport.getBoundingClientRect();
-  const x = clientX - rect.left - boardViewport.clientLeft;
-  const y = clientY - rect.top - boardViewport.clientTop;
+  const rect = boardScroller.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
   return {
     x, y,
-    contentX: (boardViewport.scrollLeft + x) / zoom,
-    contentY: (boardViewport.scrollTop + y) / zoom
+    contentX: (boardScroller.scrollLeft + x - boardBorder) / zoom,
+    contentY: (boardScroller.scrollTop + y - boardBorder) / zoom
   };
 }
 
@@ -738,12 +748,12 @@ function setZoom(newZoom, contentX, contentY, screenX, screenY) {
 
   zoom = newZoom;
   sizeBoard();
-  boardViewport.scrollLeft = contentX * zoom - screenX;
-  boardViewport.scrollTop = contentY * zoom - screenY;
+  boardScroller.scrollLeft = contentX * zoom + boardBorder - screenX;
+  boardScroller.scrollTop = contentY * zoom + boardBorder - screenY;
 }
 
 function zoomAroundCenter(factor) {
-  const rect = boardViewport.getBoundingClientRect();
+  const rect = boardScroller.getBoundingClientRect();
   const p = boardPointAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
   setZoom(zoom * factor, p.contentX, p.contentY, p.x, p.y);
 }
@@ -753,7 +763,7 @@ zoomOutBtn?.addEventListener("click", () => zoomAroundCenter(1 / 1.5));
 zoomResetBtn?.addEventListener("click", () => setZoom(1, 0, 0, 0, 0));
 
 // Ctrl + גלגלת (וצביטה במשטח מגע של מחשב נייד)
-boardViewport?.addEventListener("wheel", (e) => {
+boardScroller?.addEventListener("wheel", (e) => {
   if (!e.ctrlKey) return;
   e.preventDefault();
   const p = boardPointAt(e.clientX, e.clientY);
@@ -773,7 +783,7 @@ function touchPair() {
   };
 }
 
-boardViewport?.addEventListener("pointerdown", (e) => {
+boardScroller?.addEventListener("pointerdown", (e) => {
   if (e.pointerType !== "touch") return;
   activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (activeTouches.size === 2) {
@@ -1109,7 +1119,7 @@ let autoScrollY = 0;
 function updateAutoScroll() {
   autoScrollX = autoScrollY = 0;
   if (zoom > 1 && dragGhost) {
-    const r = boardViewport.getBoundingClientRect();
+    const r = boardScroller.getBoundingClientRect();
     if (lastClientX < r.left + AUTO_SCROLL_EDGE) autoScrollX = -AUTO_SCROLL_SPEED;
     else if (lastClientX > r.right - AUTO_SCROLL_EDGE) autoScrollX = AUTO_SCROLL_SPEED;
     if (lastClientY < r.top + AUTO_SCROLL_EDGE) autoScrollY = -AUTO_SCROLL_SPEED;
@@ -1123,8 +1133,8 @@ function updateAutoScroll() {
 function autoScrollStep() {
   autoScrollFrame = null;
   if (!dragGhost || (!autoScrollX && !autoScrollY)) return;
-  boardViewport.scrollLeft += autoScrollX;
-  boardViewport.scrollTop += autoScrollY;
+  boardScroller.scrollLeft += autoScrollX;
+  boardScroller.scrollTop += autoScrollY;
   autoScrollFrame = requestAnimationFrame(autoScrollStep);
 }
 
@@ -1156,7 +1166,7 @@ function cancelDrag() {
 // באייפון גרירה על המסך גוללת/מושכת את כל הדף גם כש-touch-action כבוי.
 // חוסמים את זה בזמן גרירת חלק, וכשנוגעים בלוח או בבמת הבוס.
 document.addEventListener("touchmove", (e) => {
-  const onBoard = e.target.closest?.("#bossStage, #boardViewport");
+  const onBoard = e.target.closest?.("#bossStage, #boardScroller");
   const dragging = dragGhost || pinch || window.isBossDragging?.();
   if ((onBoard || dragging) && e.cancelable) e.preventDefault();
 }, { passive: false });
@@ -1168,15 +1178,8 @@ document.addEventListener("pointercancel", cancelDrag);
 window.addEventListener("blur", cancelDrag);
 
 // =====================
-// Swap + Win
+// Win
 // =====================
-function swapTiles(tileA, tileB) {
-  const indexA = tiles.indexOf(tileA);
-  const indexB = tiles.indexOf(tileB);
-  if (indexA === -1 || indexB === -1) return;
-
-  [tiles[indexA], tiles[indexB]] = [tiles[indexB], tiles[indexA]];
-}
 
 function checkWin() {
   if (!isSolved()) return;
