@@ -79,6 +79,17 @@ const SOUNDS = {
     tone(ctx, 520, 0, 0.05, { type: "square", gain: 0.07 });
     tone(ctx, 780, 0.04, 0.07, { type: "triangle", gain: 0.12, slideTo: 980 });
   },
+  // מנעול שנשבר בברק: שלושה זאפים חדים, פיצוץ, שברי מתכת ורעם נמוך שמתגלגל
+  lockBreak: (ctx) => {
+    [0, 0.07, 0.14].forEach((t, i) => noiseBurst(ctx, t, 0.06, { gain: 0.5, freq: 4200 - i * 600, q: 1.2 }));
+    tone(ctx, 2200, 0, 0.18, { type: "sawtooth", gain: 0.16, slideTo: 140 });
+    noiseBurst(ctx, 0.1, 0.35, { gain: 0.45, freq: 1500, q: 0.6 });
+    [3100, 2400, 4100, 2900, 3700, 2100, 4600].forEach((f, i) => {
+      tone(ctx, f, 0.14 + i * 0.045, 0.09, { type: "triangle", gain: 0.1, slideTo: f * 0.6 });
+    });
+    noiseBurst(ctx, 0.12, 1.4, { gain: 0.4, freq: 140, q: 0.5 });
+    tone(ctx, 70, 0.1, 0.9, { type: "sine", gain: 0.3, slideTo: 40 });
+  },
   invalid: (ctx) => tone(ctx, 180, 0, 0.16, { type: "sawtooth", gain: 0.06, slideTo: 120 }),
   // קונפטי: פיצוץ + קול "פופ" נמוך
   pop:     (ctx) => {
@@ -159,13 +170,19 @@ function vibrate(pattern) {
 // =====================
 // Music (מתנגנת בלולאה, אחרי לחיצה ראשונה - דפדפנים לא מאפשרים לנגן לפני זה)
 // =====================
-const music = new Audio("assets/audio/motif_hero.mp3");
+// שני רצועות: הרגילה, ורצועת הבוס. קובץ הבוס (assets/audio/boss.mp3) מתווסף בנפרד.
+// כל עוד הוא לא קיים, ממשיכים עם הרגילה. ראו README
+const MUSIC_TRACKS = { main: "assets/audio/motif_hero.mp3", boss: "assets/audio/boss.mp3" };
+const music = new Audio(MUSIC_TRACKS.main);
 music.loop = true;
 music.volume = MUSIC_VOLUME;
 music.preload = "auto";
 
 let musicUnlocked = false;
 let musicRouted = false;
+let musicGain = null;          // עוצמת המוזיקה (כשהיא עוברת דרך Web Audio)
+let currentTrack = "main";
+let bossTrackMissing = false;  // קובץ הבוס לא נמצא
 
 // באייפון Safari מתעלם מ-music.volume ומנגן תמיד בעוצמה מלאה, ולכן המוזיקה
 // "בלעה" את הצלילים. מעבירים אותה דרך Web Audio, שם העוצמה עובדת בכל מכשיר.
@@ -176,6 +193,7 @@ function routeMusic() {
   try {
     const gain = ctx.createGain();
     gain.gain.value = MUSIC_VOLUME;
+    musicGain = gain;
     ctx.createMediaElementSource(music).connect(gain).connect(ctx.destination);
     music.volume = 1; // העוצמה נקבעת עכשיו ב-gain
     musicRouted = true;
@@ -195,6 +213,57 @@ function updateMusic() {
     music.pause();
   }
 }
+
+function setMusicLevel(level) {
+  if (musicGain) musicGain.gain.value = level;
+  else music.volume = level;
+}
+
+// מעבר חלק בין רצועות: מנמיכים, מחליפים קובץ ומעלים חזרה
+let musicFadeTimer = null;
+function fadeMusic(from, to, done) {
+  clearInterval(musicFadeTimer);
+  const steps = 8;
+  let i = 0;
+  musicFadeTimer = setInterval(() => {
+    i++;
+    setMusicLevel(from + (to - from) * (i / steps));
+    if (i >= steps) {
+      clearInterval(musicFadeTimer);
+      done?.();
+    }
+  }, 50);
+}
+
+function setMusicTrack(name) {
+  if (name === "boss" && bossTrackMissing) name = "main";
+  if (name === currentTrack) return;
+
+  const swap = () => {
+    currentTrack = name;
+    music.src = MUSIC_TRACKS[name];
+    updateMusic();
+  };
+
+  if (!musicUnlocked || music.paused) {
+    swap();
+    return;
+  }
+  fadeMusic(MUSIC_VOLUME, 0, () => {
+    swap();
+    fadeMusic(0, MUSIC_VOLUME);
+  });
+}
+
+// קובץ הבוס חסר: חוזרים בשקט לרצועה הרגילה
+music.addEventListener("error", () => {
+  if (currentTrack !== "boss") return;
+  bossTrackMissing = true;
+  currentTrack = "main";
+  music.src = MUSIC_TRACKS.main;
+  setMusicLevel(MUSIC_VOLUME);
+  updateMusic();
+});
 
 function unlockMusic() {
   if (musicUnlocked) return;

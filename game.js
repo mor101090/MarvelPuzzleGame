@@ -348,6 +348,14 @@ let bossMode = false;
 function setGameMode(isBoss) {
   bossMode = isBoss;
   gameScreen?.classList.toggle("boss-mode", isBoss);
+  syncMusicTrack();
+}
+
+// מוזיקה אחרת (מלחמתית) במסך הבוסים ובשלב בוס
+function syncMusicTrack() {
+  const onBoss = !bossScreen.classList.contains("hidden") ||
+    (!gameScreen.classList.contains("hidden") && bossMode);
+  setMusicTrack(onBoss ? "boss" : "main");
 }
 
 function showScreen(screen) {
@@ -359,6 +367,8 @@ function showScreen(screen) {
   [homeScreen, levelScreen, bossScreen, gameScreen].forEach(el => {
     el?.classList.toggle("hidden", el !== screen);
   });
+  // למסך המשחק המוזיקה נקבעת ב-setGameMode (שלב רגיל או בוס)
+  if (screen !== gameScreen) syncMusicTrack();
 }
 
 function showHome() {
@@ -1203,7 +1213,13 @@ function checkWin() {
   startConfetti();
 
   clearTimeout(winTimer);
-  winTimer = setTimeout(() => openWinScreen(earned), WIN_SCREEN_DELAY);
+  // פעם ראשונה שמסיימים שלב אחרון בקבוצה (שלב 10): אחרי ההתרגשות עוברים ישר לבוס,
+  // והמנעול שלו נשבר בברק. בלי חלון כוכבים ובלי כפתור
+  winTimer = setTimeout(() => {
+    const group = bossAfterLevel(currentLevelIndex);
+    if (group >= 0 && window.tutorialHook?.bossRevealPending()) showBoss(group);
+    else openWinScreen(earned);
+  }, WIN_SCREEN_DELAY);
 }
 
 // =====================
@@ -1327,14 +1343,13 @@ function isLastLevel() {
   return currentLevelIndex >= levels.length - 1;
 }
 
-// בסוף כל קבוצה של 10 שלבים יש בוס. אם יש בוס כזה, אחרי השלב עוברים אליו
+// בסוף כל קבוצה של 10 שלבים יש בוס (אם כבר קיים). מחזיר את מספר הבוס, או -1
 function bossAfterLevel(index) {
   const group = (index + 1) / LEVELS_PER_GROUP - 1;
   return Number.isInteger(group) && typeof bosses !== "undefined" && bosses[group] ? group : -1;
 }
 
 function nextButtonLabel() {
-  if (bossAfterLevel(currentLevelIndex) >= 0) return "BOSS";
   return isLastLevel() ? "LEVELS" : "NEXT LEVEL";
 }
 
@@ -1380,10 +1395,7 @@ function closeWinScreen() {
 }
 
 function goNext() {
-  const boss = bossMode ? -1 : bossAfterLevel(currentLevelIndex);
-  if (boss >= 0) {
-    showBoss(boss);          // האנימציה והמדריך של הבוס מופיעים בפעם הראשונה
-  } else if (bossMode) {
+  if (bossMode) {
     showBoss();
   } else if (isLastLevel()) {
     showLevels();

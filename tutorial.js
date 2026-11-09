@@ -2,7 +2,7 @@
 // Tips (מדריכים קצרים): כל אחד קופץ פעם אחת ונשמר שנראה
 // 1. welcome: איך משחקים, כולל זום - בתחילת המשחק
 // 2. rotate:  רמז עם אנימציה לסובב את הטלפון - בשלב הרחב הראשון
-// 3. boss:    פתיחת המנעול של הבוס הראשון והסבר על שלב בוס - אחרי שלב 10
+// 3. boss:    מנעול הבוס הראשון נשבר בברק, והסבר על שלב בוס - אחרי שלב 10 (עוברים אליו ישר)
 // =====================
 
 const TIPS_KEY = "marvelPuzzle.tips";
@@ -115,26 +115,42 @@ window.tutorialHook = {
     }, 450);
   },
 
-  // אנימציית פתיחת המנעול על כרטיס הבוס, ואחריה ההסבר. מחזיר false אם כבר הוצג
-  bossReveal(card) {
-    if (tipsSeen().boss) return false;
+  // האם עוד לא ראו את פתיחת הבוס הראשון (אנימציה + הסבר)
+  bossRevealPending() {
+    return !tipsSeen().boss;
+  },
 
+  // המנעול של הבוס נשבר בברק על הכרטיס, ואחריו ההסבר. מחזיר false אם כבר הוצג
+  bossReveal(card) {
+    if (!this.bossRevealPending()) return false;
+
+    // המנעול מתפצל לשני חצאים (אותו ציור, שני חיתוכים), וברק מכה בו
+    const lock =
+      `<path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>` +
+      `<rect x="5" y="10" width="14" height="11" rx="2.2" fill="#fff" stroke="#000" stroke-width="1.2"/>`;
     const veil = document.createElement("span");
     veil.className = "boss-veil";
     veil.innerHTML =
-      `<svg viewBox="0 0 24 24" aria-hidden="true">` +
-      `<path class="lock-shackle" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3"/>` +
-      `<rect class="lock-body" x="5" y="10" width="14" height="11" rx="2.2" fill="#fff" stroke="#000" stroke-width="1.2"/>` +
-      `</svg>`;
+      `<svg viewBox="0 0 24 24" aria-hidden="true"><defs>` +
+      `<clipPath id="lockClipL"><polygon points="-2,-2 13.2,-2 10.6,9 13.6,15 11.4,26 -2,26"/></clipPath>` +
+      `<clipPath id="lockClipR"><polygon points="26,-2 13.2,-2 10.6,9 13.6,15 11.4,26 26,26"/></clipPath></defs>` +
+      `<g class="lock-half lock-half--l" clip-path="url(#lockClipL)">${lock}</g>` +
+      `<g class="lock-half lock-half--r" clip-path="url(#lockClipR)">${lock}</g></svg>` +
+      `<svg class="lock-bolt" viewBox="0 0 24 24" aria-hidden="true">` +
+      `<polyline points="15,-3 9,6 14.5,8.5 7.5,17 12,19 8,27" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>` +
+      `<polyline points="15,-3 9,6 14.5,8.5 7.5,17 12,19 8,27" fill="none" stroke="#9fd8ff" stroke-width="3.4" stroke-linejoin="round" opacity="0.55"/></svg>`;
     card.appendChild(veil);
 
-    // רטט וצליל בשיא הפתיחה
-    setTimeout(() => { playSound("snap"); vibrate(30); }, 700);
-    setTimeout(() => { playSound("star", 2); }, 1100);
+    // הבזק ברק על כל המסך, ואחריו הצליל והרטט (תואם לאנימציה ב-CSS)
+    const flash = document.createElement("div");
+    flash.className = "lightning-flash";
+    document.body.appendChild(flash);
+    setTimeout(() => { playSound("lockBreak"); vibrate([60, 30, 120, 40, 60]); }, 450);
+    setTimeout(() => flash.remove(), 1400);
     setTimeout(() => {
       veil.remove();
       showTip("boss");
-    }, 2300);
+    }, 2500);
     return true;
   },
 
