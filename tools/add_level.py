@@ -3,6 +3,7 @@
 
 Usage:  python3 tools/add_level.py path/to/picture.jpg [level-id]
         python3 tools/add_level.py path/to/picture.jpg --boss N      (boss picture)
+        add --trim to cut plain margins (a white or black frame) around the picture first
 
 - level-id is the level number (levels are numbered 1, 2, 3, ...). It defaults to the file
   name without extension, so name the file by its number (e.g. 31.jpg -> level 31).
@@ -15,7 +16,7 @@ Needs Pillow:  pip install pillow
 import os
 import sys
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SIZES = {"": (1800, 80), "thumbs": (480, 75)}  # folder -> (max side, quality)
@@ -27,8 +28,19 @@ def fit(im, max_side):
     return im.resize((round(w * k), round(h * k)), Image.LANCZOS) if k < 1 else im
 
 
+def trim_margins(im, tolerance=40):
+    """Cut the plain margin around the picture: whatever is close to the corner color."""
+    corner = im.getpixel((0, 0))
+    diff = ImageChops.difference(im, Image.new(im.mode, im.size, corner)).convert("L")
+    box = diff.point(lambda v: 255 if v > tolerance else 0).getbbox()
+    return im.crop(box) if box else im
+
+
 def main():
     args = sys.argv[1:]
+    trim = "--trim" in args
+    if trim:
+        args.remove("--trim")
     if not args:
         sys.exit(__doc__)
 
@@ -45,6 +57,10 @@ def main():
         src = args[0]
         level_id = args[1] if len(args) > 1 else os.path.splitext(os.path.basename(src))[0]
     im = Image.open(src).convert("RGB")
+    if trim:
+        before = im.size
+        im = trim_margins(im)
+        print(f"trimmed margins: {before} -> {im.size}")
 
     for folder, (max_side, quality) in SIZES.items():
         out_dir = os.path.join(ROOT, "assets", folder_name, folder)
