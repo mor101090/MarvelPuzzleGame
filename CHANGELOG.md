@@ -4,6 +4,29 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
+## [0.29.0] (`@@0.29.0`) - Tips
+### Added
+- **Short tips that show once each** (kept on the device), in a small card with a
+  looping animation:
+  - **How to play** the first time a level opens: drag a piece onto another to swap,
+    pieces that fit join up, and how to **zoom** (the + and − buttons or a two-finger
+    pinch). The animation shows two fingers spreading.
+  - **Turn your phone** the first time you open a wide picture (level 2) while the
+    phone is upright. An animated phone turns sideways. The tip closes by itself as
+    soon as you turn the phone.
+  - **Boss level**: after you finish level 10 the button on the win window says
+    **BOSS** and takes you to the Boss screen. Boss 1's **lock shakes and opens**
+    (with a sound and a vibration), and the tip explains the mode: shards, drag to
+    move, tap to turn, join, and a shard in its right place locks. It also shows the
+    first time a boss is started.
+- **Show tips again** button in Settings.
+### Changed
+- The next button after a level that ends a group of 10 (levels 10, 20, ...) says
+  **BOSS** and goes to the Boss screen when that group has a boss. Other levels are
+  unchanged.
+### Notes
+- Tips are in English like the rest of the game. Tell me if you want the text changed.
+
 ## [0.28.0] (`bc2e106`) - Responsive pass, zoom frame, sharper pictures, cleanup
 ### Fixed
 - **Very narrow phones (320 px):** the Choose Level screen was wider than the

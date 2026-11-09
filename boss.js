@@ -466,6 +466,7 @@ function startBoss(index = 0) {
     }
     renderBoss();
     updateBossHud();
+    window.tutorialHook?.bossStarted();
   };
   img.onerror = () => {
     if (token !== boss_loadToken) return;

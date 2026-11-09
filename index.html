@@ -112,11 +112,22 @@
         <input id="vibrationToggle" class="toggle" type="checkbox" />
       </label>
 
+      <button id="resetTipsBtn" class="text-btn" type="button">Show tips again</button>
       <button id="closeSettingsBtn" class="next" type="button">DONE</button>
     </div>
   </div>
 
-  <!-- GALLERY VIEWER -->
+  <!-- TIP (מדריך קצר) -->
+  <div id="tipModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tipTitle">
+    <div class="modal-card tip-card">
+      <h2 id="tipTitle">HOW TO PLAY</h2>
+      <div id="tipAnim" class="tip-anim" aria-hidden="true"></div>
+      <div id="tipText" class="tip-text"></div>
+      <button id="tipOkBtn" class="next" type="button">GOT IT</button>
+    </div>
+  </div>
+
+  <!-- PICTURE VIEWER -->
   <div id="viewerModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Picture">
     <figure class="viewer">
       <img id="viewerImg" alt="" />
@@ -146,5 +157,6 @@
   <script src="sound.js"></script>
   <script src="game.js"></script>
   <script src="boss.js"></script>
+  <script src="tutorial.js"></script>
 </body>
 </html>
