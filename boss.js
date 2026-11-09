@@ -598,7 +598,16 @@ function checkBossWin(g) {
   startConfetti();
 
   clearTimeout(winTimer);
-  winTimer = setTimeout(() => openBossWinScreen(earned), WIN_SCREEN_DELAY);
+  // פעם ראשונה שמנצחים את הבוס: אחרי ההתרגשות חוזרים לשלבים הרגילים, ושם נפתחת
+  // הקבוצה הבאה באנימציה. בלי חלון כוכבים (הכוכבים נשמרים בכרטיס הבוס)
+  const nextGroup = boss.index + 1;
+  winTimer = setTimeout(() => {
+    if (levels.some(level => level.category === nextGroup) && window.tutorialHook?.groupRevealPending(nextGroup)) {
+      showLevels(nextGroup);
+    } else {
+      openBossWinScreen(earned);
+    }
+  }, WIN_SCREEN_DELAY);
 }
 
 function openBossWinScreen(stars) {

@@ -330,7 +330,15 @@ function updateHud() {
 
 // שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
 function isUnlocked(index) {
-  return UNLOCK_ALL_LEVELS || index === 0 || isCompleted(index) || isCompleted(index - 1);
+  if (UNLOCK_ALL_LEVELS) return true;
+  return isGroupOpen(levels[index].category) && (index === 0 || isCompleted(index) || isCompleted(index - 1));
+}
+
+// קבוצה (חוץ מהראשונה) נפתחת אחרי שמנצחים את הבוס של הקבוצה שלפניה (אם יש בוס כזה)
+function isGroupOpen(group) {
+  if (UNLOCK_ALL_LEVELS || group === 0) return true;
+  const def = typeof bosses !== "undefined" ? bosses[group - 1] : null;
+  return !def || (progress.boss[def.id] || 0) > 0;
 }
 
 // השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
@@ -381,8 +389,9 @@ function showBoss(reveal = -1) {
   showScreen(bossScreen);
 }
 
-function showLevels() {
-  renderLevelSelect();
+// reveal = מספר הקבוצה שנפתחה עכשיו (אחרי שניצחו את הבוס): מנגנים אנימציה ששלבים חדשים נפתחו
+function showLevels(reveal = -1) {
+  renderLevelSelect(reveal);
   showScreen(levelScreen);
 }
 
@@ -430,11 +439,12 @@ function startLevel(index, difficulty = 1) {
   loadLevel(index, difficulty);
 }
 
-function renderLevelSelect() {
+function renderLevelSelect(reveal = -1) {
   levelList.innerHTML = "";
 
   categories.forEach(category => {
     const section = document.createElement("section");
+    section.dataset.group = category.id;
 
     const title = document.createElement("h2");
     title.className = "category-title";
@@ -445,7 +455,8 @@ function renderLevelSelect() {
     const base = category.grid * category.grid;
     const sub = document.createElement("p");
     sub.className = "category-sub";
-    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces`;
+    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces` +
+      (isGroupOpen(category.id) ? "" : ` · beat Boss ${category.id} to open`);
     section.appendChild(sub);
 
     const grid = document.createElement("div");
@@ -510,6 +521,7 @@ function renderLevelSelect() {
 
     section.appendChild(grid);
     levelList.appendChild(section);
+    if (category.id === reveal) window.tutorialHook?.groupReveal(section, category.name, category.id);
   });
 }
 
