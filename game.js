@@ -598,7 +598,6 @@ function renderBossSelect(reveal = -1) {
 
   const section = document.createElement("section");
   section.innerHTML =
-    `<h2 class="category-title">Boss</h2>` +
     `<p class="category-sub">Shattered pieces · rotate and join</p>` +
     `<div class="group-soon">${LOCK_SVG}<span>More bosses coming soon</span></div>`;
 
