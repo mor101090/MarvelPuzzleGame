@@ -15,6 +15,9 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 :root {
   --comic: "Bangers", "Impact", "Arial Black", sans-serif;
+  /* בסיס היישור: שוליים אחידים מהצדדים, וגובה אחיד לכל פקד בשורה העליונה */
+  --gutter: 16px;
+  --control: 44px;
   /* דיו של קומיקס: קו מתאר לפי גודל הטקסט (חצי ממנו מוסתר מאחורי האות), וצל חד בלי טשטוש */
   --ink-lg: 4px;     /* טקסט 24px ומעלה */
   --ink-md: 2.5px;   /* טקסט 16-22px */
@@ -130,13 +133,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   align-content: start; /* הלוח צמוד למעלה ולא "צף" באמצע המסך */
 }
 
-.game-top{
-  padding: 14px 14px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
+
 
 /* טקסט לבן עם קו שחור - כמו הכפתורים במסך הבית */
 .level-label,
@@ -167,6 +164,10 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 /* כפתורים בסגנון של כפתורי מסך הבית: גלולה אדומה עם קו שחור וטקסט לבן עם קונטור */
 .text-btn,
 .next{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   white-space: nowrap;
   background: #E23636;
   color: #fff;
@@ -408,12 +409,24 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   align-content: start;
 }
 
-.levels-top{
+/* שורה עליונה: שלוש עמודות, הכותרת תמיד בדיוק באמצע המסך */
+.levels-top,
+.game-top{
   display: grid;
-  grid-template-columns: 1fr auto 1fr; /* הכותרת תמיד באמצע */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
-  padding: 14px 14px 0;
+  padding: 14px var(--gutter) 0;
+}
+
+.levels-top > :first-child,
+.game-top > :first-child{
+  justify-self: start;
+}
+
+.levels-top > :last-child:not(:nth-child(2)),
+.game-top > :last-child{
+  justify-self: end;
 }
 
 .levels-top .text-btn{
@@ -848,8 +861,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
     font-size: 20px;
   }
   .icon-btn--small{
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
   #puzzleWrap{
     padding-top: 4px;
@@ -1068,15 +1081,15 @@ html, body{
 /* מסכים צרים מאוד (320px): כותרת וכפתורים קטנים יותר כדי שהכל ייכנס */
 @media (max-width: 360px){
   .levels-top{
-    padding: 10px 8px 0;
+    padding: 10px var(--gutter) 0;
     gap: 6px;
   }
   .levels-title{
     font-size: 17px;
   }
   .levels-top .text-btn{
-    padding: 8px 9px;
-    font-size: 13px;
+    padding: 0 10px;
+    font-size: 15px;
   }
 }
 
@@ -1384,4 +1397,24 @@ html, body{
   .modal-card .next{ margin-top: 6px; }
   .modal-card{ padding: 12px 18px 16px; gap: 2px; }
   .link-btn{ margin-top: 0; padding: 4px 8px; }
+}
+
+/* כפתורי השורה העליונה: כולם באותו גובה */
+.levels-top .text-btn,
+.game-top .text-btn{
+  height: var(--control);
+  padding: 0 16px;
+}
+
+.icon-btn--small{
+  width: var(--control);
+  height: var(--control);
+}
+
+/* אייקון בתוך כפתור (החץ של Back): מצויר, לא תו מהפונט */
+.btn-icon{
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-left: -4px;
 }
