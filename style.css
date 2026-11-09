@@ -1162,3 +1162,81 @@ html, body{
   .tip-card{ gap: 4px; padding: 14px 18px; }
   .tip-text p{ font-size: 14px; margin: 3px 0; }
 }
+
+/* ===== NEW LEVELS UNLOCKED (קבוצה חדשה נפתחה) ===== */
+.unlock-banner{
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  z-index: 9500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 28px;
+  border: 3px solid #ffc933;
+  border-radius: 18px;
+  background: rgba(20,20,20,0.92);
+  box-shadow: 0 0 40px rgba(255,201,51,0.55);
+  pointer-events: none;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: banner-show 2.7s ease-out forwards;
+}
+
+.unlock-banner span{
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #fff;
+}
+
+.unlock-banner b{
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(#ffe38a, #d99a1e 60%, #9a6410);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 #000);
+}
+
+@keyframes banner-show{
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.4); }
+  12%  { opacity: 1; transform: translateX(-50%) scale(1.08); }
+  20%  { transform: translateX(-50%) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(1); }
+}
+
+/* כרטיסי הקבוצה שנפתחה קופצים אחד אחרי השני עם הילה זהובה */
+.group-reveal .category-title{
+  animation: title-glow 1s ease-in-out 3;
+}
+
+.group-reveal .level-card{
+  animation: card-pop 0.7s cubic-bezier(.3,1.6,.5,1) both, card-glow 1.4s ease-out both;
+  animation-delay: calc(0.5s + var(--i, 0) * 90ms), calc(0.5s + var(--i, 0) * 90ms);
+}
+
+@keyframes card-pop{
+  0%   { transform: scale(0.15) rotate(-10deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes card-glow{
+  0%   { box-shadow: 0 0 0 0 rgba(255,201,51,0.95), 0 10px 16px rgba(0,0,0,0.45); }
+  60%  { box-shadow: 0 0 26px 8px rgba(255,201,51,0.7), 0 10px 16px rgba(0,0,0,0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(255,201,51,0), 0 10px 16px rgba(0,0,0,0.45); }
+}
+
+@keyframes title-glow{
+  50% { filter: drop-shadow(0 0 12px #ffc933) drop-shadow(0 2px 0 #000); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .unlock-banner{ animation: none; }
+  .group-reveal .category-title, .group-reveal .level-card{ animation: none; }
+}

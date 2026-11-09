@@ -90,6 +90,16 @@ const SOUNDS = {
     noiseBurst(ctx, 0.12, 1.4, { gain: 0.4, freq: 140, q: 0.5 });
     tone(ctx, 70, 0.1, 0.9, { type: "sine", gain: 0.3, slideTo: 40 });
   },
+  // קבוצת שלבים חדשה נפתחה: ארפג'ו עולה, נצנוצים ושאיפת אוויר
+  unlock:  (ctx) => {
+    noiseBurst(ctx, 0, 0.35, { gain: 0.12, freq: 1200, q: 0.5 });
+    [523, 659, 784, 1047, 1319].forEach((f, i) => {
+      tone(ctx, f, 0.1 + i * 0.1, 0.35, { type: "triangle", gain: 0.15 });
+      tone(ctx, f * 2, 0.12 + i * 0.1, 0.25, { type: "sine", gain: 0.05 });
+    });
+    [2093, 2637, 3136, 2349, 3520].forEach((f, i) => tone(ctx, f, 0.7 + i * 0.12, 0.3, { type: "sine", gain: 0.045 }));
+    tone(ctx, 131, 0.55, 1.1, { type: "sine", gain: 0.16 });
+  },
   invalid: (ctx) => tone(ctx, 180, 0, 0.16, { type: "sawtooth", gain: 0.06, slideTo: 120 }),
   // קונפטי: פיצוץ + קול "פופ" נמוך
   pop:     (ctx) => {

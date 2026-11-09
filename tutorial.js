@@ -3,6 +3,7 @@
 // 1. welcome: איך משחקים, כולל זום - בתחילת המשחק
 // 2. rotate:  רמז עם אנימציה לסובב את הטלפון - בשלב הרחב הראשון
 // 3. boss:    מנעול הבוס הראשון נשבר בברק, והסבר על שלב בוס - אחרי שלב 10 (עוברים אליו ישר)
+// 4. group:   אחרי שמנצחים בוס חוזרים לשלבים ושם נפתחת הקבוצה הבאה באנימציה (כל קבוצה פעם אחת)
 // =====================
 
 const TIPS_KEY = "marvelPuzzle.tips";
@@ -152,6 +153,36 @@ window.tutorialHook = {
       showTip("boss");
     }, 2500);
     return true;
+  },
+
+  // האם כבר הוצגה האנימציה שהקבוצה group נפתחה
+  groupRevealPending(group) {
+    return !tipsSeen()[`group${group}`];
+  },
+
+  // קבוצת שלבים חדשה נפתחה (אחרי שניצחו את הבוס): מגללים אליה, באנר, קונפטי וצליל,
+  // והכרטיסים קופצים אחד אחרי השני
+  groupReveal(section, name, group) {
+    if (!this.groupRevealPending(group)) return;
+    markTipSeen(`group${group}`);
+
+    section.classList.add("group-reveal");
+    section.querySelectorAll(".level-card").forEach((card, i) => card.style.setProperty("--i", i));
+
+    const banner = document.createElement("div");
+    banner.className = "unlock-banner";
+    banner.innerHTML = `<span>NEW LEVELS UNLOCKED</span><b></b>`;
+    banner.querySelector("b").textContent = name;
+
+    setTimeout(() => {
+      if (levelScreen.classList.contains("hidden")) return;
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.body.appendChild(banner);
+      playSound("unlock");
+      vibrate([30, 40, 30, 40, 90]);
+      startConfetti();
+      setTimeout(() => banner.remove(), 2700);
+    }, 250);
   },
 
   // לכפתור "הצג מדריכים שוב" בהגדרות
