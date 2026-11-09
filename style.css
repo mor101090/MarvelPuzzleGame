@@ -3,6 +3,25 @@
 html, body { height: 100%; margin: 0; }
 body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
+/* פונט קומיקס לכותרות, כפתורים ומספרים: אותו מראה בכל מכשיר.
+   Bangers (SIL Open Font License), אותיות לטיניות בלבד, נשמר עם המשחק */
+@font-face {
+  font-family: "Bangers";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/bangers-latin.woff2") format("woff2");
+}
+
+:root { --comic: "Bangers", "Impact", "Arial Black", sans-serif; }
+
+.level-label, .levels-title, .category-title, .hud-moves, .zoom-level,
+.modal-card h2, .level-tag, .diff-btn, .win-stats, .unlock-banner, .level-tab,
+.category-sub, .card-stars b, .win{
+  font-family: var(--comic);
+  font-weight: 400;
+}
+
 /* ===== Screens ===== */
 .screen {
   min-height: 100svh;
@@ -118,13 +137,38 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   width: 44px;
 }
 
-.text-btn{
+/* כפתורים בסגנון של כפתורי מסך הבית: גלולה אדומה עם קו שחור וטקסט לבן עם קונטור */
+.text-btn,
+.next{
   white-space: nowrap;
-  background: rgba(226,54,54,0.45);
+  background: #E23636;
   color: #fff;
-  border: 1px solid rgba(226,54,54,0.7);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: var(--comic);
+  font-size: 18px;
+  letter-spacing: 1px;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+  cursor: pointer;
+}
+
+.text-btn:active,
+.next:active{
+  transform: translateY(1px) scale(0.98);
+}
+
+.text-btn:disabled{
+  opacity: 0.4;
+  cursor: default;
+}
+
+.text-btn:focus-visible,
+.next:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }
 
 #puzzleWrap{
@@ -206,13 +250,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 .next{
   margin-top: 4px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: none;
-  background: #ED1D24;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  padding: 10px 22px;
+  font-size: 22px;
 }
 
 /* ===== SETTINGS ===== */
@@ -688,6 +727,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 }
 
 .zoom-btn{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* − ו-+ ברורים */
+  -webkit-text-stroke: 0;
   width: 36px;
   height: 36px;
   padding: 0;
@@ -1239,4 +1280,41 @@ html, body{
 @media (prefers-reduced-motion: reduce){
   .unlock-banner{ animation: none; }
   .group-reveal .category-title, .group-reveal .level-card{ animation: none; }
+}
+
+/* ===== LEVEL TABS (קבוצה אחת בכל פעם) ===== */
+.level-tabs{
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 16px 4px;
+  scrollbar-width: none;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.level-tabs::-webkit-scrollbar{ display: none; }
+
+.level-tab{
+  flex: none;
+  padding: 6px 14px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #4a4647;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 1px;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  cursor: pointer;
+}
+
+.level-tab.is-active{
+  background: #ffc933;
+  color: #fff;
+}
+
+.level-tab:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }

@@ -19,6 +19,7 @@ const backBtn = document.getElementById("backBtn");
 const chooseLevelBtn = document.getElementById("chooseLevelBtn");
 const levelScreen = document.getElementById("levelScreen");
 const levelList = document.getElementById("levelList");
+const levelTabs = document.getElementById("levelTabs");
 const levelsBackBtn = document.getElementById("levelsBackBtn");
 const bossScreen = document.getElementById("bossScreen");
 const bossList = document.getElementById("bossList");
@@ -256,8 +257,37 @@ function pieceCount(index, difficulty) {
   return base * DIFFICULTIES[difficulty - 1].factor;
 }
 
-// בוחר cols x rows שמכפלתם בדיוק מספר החלקים, כך שהחלקים יהיו הכי קרובים לריבוע
+// חלק לא קטן מזה (בפיקסלים, בלי זום) - כדי שאפשר יהיה לתפוס אותו באצבע
+const MIN_TILE_PX = 32;
+
+// הגודל המשוער של הלוח במסך הנוכחי (לחישוב כמה חלקים נכנסים). הערכה קבועה, כדי
+// שמספר החלקים בחלון בחירת הרמה יהיה זהה למה שיש בפועל במשחק
+function estimatedBoardSize(aspect) {
+  const availW = Math.min(window.innerWidth - 38, maxPuzzleSize);
+  const availH = Math.min(window.innerHeight - 150, maxPuzzleSize);
+  return availW / availH > aspect
+    ? { w: availH * aspect, h: availH }
+    : { w: availW, h: availW / aspect };
+}
+
+// cols x rows לשלב ולרמה, כך שהחלקים קרובים לריבוע ולא קטנים מ-MIN_TILE_PX
 function gridFor(index, difficulty, aspect) {
+  const grid = idealGrid(index, difficulty, aspect);
+  const board = estimatedBoardSize(aspect);
+  return {
+    cols: Math.max(2, Math.min(grid.cols, Math.floor(board.w / MIN_TILE_PX))),
+    rows: Math.max(2, Math.min(grid.rows, Math.floor(board.h / MIN_TILE_PX)))
+  };
+}
+
+// מספר החלקים בפועל (אחרי ההגבלה לגודל אצבע)
+function actualPieceCount(index, difficulty, aspect) {
+  const { cols, rows } = gridFor(index, difficulty, aspect);
+  return cols * rows;
+}
+
+// בוחר cols x rows שמכפלתם בדיוק מספר החלקים, כך שהחלקים יהיו הכי קרובים לריבוע
+function idealGrid(index, difficulty, aspect) {
   const n = pieceCount(index, difficulty);
   if (difficulty === 1) return { cols: levels[index].grid, rows: levels[index].grid };
 
@@ -444,10 +474,35 @@ function startLevel(index, difficulty = 1) {
   loadLevel(index, difficulty);
 }
 
+// הקבוצה שמוצגת בבחירת השלב (לשונית). ברירת מחדל: הקבוצה של השלב הבא לשחק
+let levelTab = null;
+
+function renderLevelTabs() {
+  levelTabs.innerHTML = "";
+  categories.forEach(category => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "level-tab" + (category.id === levelTab ? " is-active" : "");
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-selected", category.id === levelTab);
+    tab.textContent = category.name;
+    tab.addEventListener("click", () => {
+      levelTab = category.id;
+      renderLevelSelect();
+      window.scrollTo(0, 0);
+    });
+    levelTabs.appendChild(tab);
+  });
+}
+
 function renderLevelSelect(reveal = -1) {
   levelList.innerHTML = "";
+  if (reveal >= 0) levelTab = reveal;
+  if (levelTab === null) levelTab = levels[nextPlayableLevel()].category;
+  renderLevelTabs();
 
   categories.forEach(category => {
+    if (category.id !== levelTab) return;
     const section = document.createElement("section");
     section.dataset.group = category.id;
 
@@ -460,7 +515,7 @@ function renderLevelSelect(reveal = -1) {
     const base = category.grid * category.grid;
     const sub = document.createElement("p");
     sub.className = "category-sub";
-    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces`;
+    sub.textContent = `${base} · ${base * 2} · up to ${base * 4} pieces`;
     section.appendChild(sub);
 
     const grid = document.createElement("div");
@@ -609,7 +664,7 @@ function openViewer(index) {
     btn.className = "diff-btn" + (unlocked ? "" : " is-locked") + (earned >= 1 ? " is-done" : "");
     btn.innerHTML =
       `<span class="diff-name">${d.name}</span>` +
-      `<small>${pieceCount(index, difficulty)} pieces</small>` +
+      `<small data-difficulty="${difficulty}">${pieceCount(index, difficulty)} pieces</small>` +
       (unlocked ? `<span class="stars diff-stars">${starsHtml(earned)}</span>` : LOCK_SVG);
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -626,6 +681,17 @@ function openViewer(index) {
     });
     viewerLevels.appendChild(btn);
   });
+
+  // מספר החלקים בפועל תלוי בצורת התמונה ובגודל המסך: מעדכנים כשהתמונה נטענה
+  const showCounts = () => {
+    if (viewerIndex !== index || !viewerImg.naturalWidth) return;
+    const aspect = viewerImg.naturalWidth / viewerImg.naturalHeight;
+    viewerLevels.querySelectorAll("small[data-difficulty]").forEach(small => {
+      small.textContent = `${actualPieceCount(index, +small.dataset.difficulty, aspect)} pieces`;
+    });
+  };
+  if (viewerImg.complete) showCounts();
+  else viewerImg.addEventListener("load", showCounts, { once: true });
 
   viewerModal.classList.remove("hidden");
 }
