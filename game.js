@@ -59,7 +59,7 @@ const GROUP_NAMES = ["Rookie", "Hero", "Avenger", "Legend", "Cosmic"];
 // שלב N = הקובץ assets/levels/N.webp (סדר השלבים הוא סדר המספרים בשם הקובץ).
 // כדי להוסיף שלבים: tools/add_level.py ואז מעלים את LEVEL_COUNT.
 // thumb = גרסה קטנה לכרטיסים במסך בחירת השלב (נטענת מהר)
-const LEVEL_COUNT = 30;
+const LEVEL_COUNT = 58;
 const levels = Array.from({ length: LEVEL_COUNT }, (_, index) => {
   const id = String(index + 1);
   const group = Math.floor(index / LEVELS_PER_GROUP);
@@ -565,7 +565,7 @@ function renderBossSelect(reveal = -1) {
         `<span class="stars">${starsHtml(stars)}</span></span>`;
       card.setAttribute("aria-label", `Boss ${index + 1}, ${stars} of 3 stars`);
       card.addEventListener("click", () => startBoss(index));
-      if (index === reveal) window.tutorialHook?.bossReveal(card);
+      if (index === reveal) window.tutorialHook?.bossReveal(card, index);
     } else {
       card.className = "level-card is-locked";
       card.setAttribute("aria-label", `Boss ${index + 1}, ${category.name}, coming soon`);
@@ -1233,7 +1233,7 @@ function checkWin() {
   // והמנעול שלו נשבר בברק. בלי חלון כוכבים ובלי כפתור
   winTimer = setTimeout(() => {
     const group = bossAfterLevel(currentLevelIndex);
-    if (group >= 0 && window.tutorialHook?.bossRevealPending()) showBoss(group);
+    if (group >= 0 && window.tutorialHook?.bossRevealPending(group)) showBoss(group);
     else openWinScreen(earned);
   }, WIN_SCREEN_DELAY);
 }

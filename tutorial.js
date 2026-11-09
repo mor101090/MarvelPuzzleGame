@@ -116,14 +116,17 @@ window.tutorialHook = {
     }, 450);
   },
 
-  // האם עוד לא ראו את פתיחת הבוס הראשון (אנימציה + הסבר)
-  bossRevealPending() {
-    return !tipsSeen().boss;
+  // האם עוד לא ראו את אנימציית הפתיחה של הבוס של הקבוצה group (אחרי שלב 10, 20...).
+  // מי שכבר ראה את הבוס הראשון (לפני שהאנימציה נשמרה לכל בוס) לא יראה אותו שוב
+  bossRevealPending(group) {
+    const seen = tipsSeen();
+    return !seen[`bossReveal${group}`] && !(group === 0 && seen.boss);
   },
 
   // המנעול של הבוס נשבר בברק על הכרטיס, ואחריו ההסבר. מחזיר false אם כבר הוצג
-  bossReveal(card) {
-    if (!this.bossRevealPending()) return false;
+  bossReveal(card, group) {
+    if (!this.bossRevealPending(group)) return false;
+    markTipSeen(`bossReveal${group}`);
 
     // המנעול מתפצל לשני חצאים (אותו ציור, שני חיתוכים), וברק מכה בו
     const lock =
