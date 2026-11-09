@@ -13,11 +13,18 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   src: url("assets/fonts/bangers-latin.woff2") format("woff2");
 }
 
-:root { --comic: "Bangers", "Impact", "Arial Black", sans-serif; }
+:root {
+  --comic: "Bangers", "Impact", "Arial Black", sans-serif;
+  /* דיו של קומיקס: קו מתאר לפי גודל הטקסט (חצי ממנו מוסתר מאחורי האות), וצל חד בלי טשטוש */
+  --ink-lg: 4px;     /* טקסט 24px ומעלה */
+  --ink-md: 2.5px;   /* טקסט 16-22px */
+  --drop: 0 3px 0 #000;
+  --drop-card: 0 4px 0 rgba(0,0,0,0.55);
+}
 
 .level-label, .levels-title, .category-title, .hud-moves, .zoom-level,
 .modal-card h2, .level-tag, .diff-btn, .win-stats, .unlock-banner, .level-tab,
-.category-sub, .card-stars b, .win{
+.category-sub, .card-stars b, .win, .viewer figcaption{
   font-family: var(--comic);
   font-weight: 400;
 }
@@ -41,16 +48,31 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   position: absolute;
   top: 18px;
   right: 18px;
-  background: transparent;
-  border: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
   padding: 0;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #E23636;
+  box-shadow: var(--drop);
   cursor: pointer;
 }
 
-.icon-btn img{
-  width: 64px;
-  height: auto;
-  display: block;
+.icon-btn .gear{
+  width: 62%;
+  height: 62%;
+}
+
+.icon-btn:active{
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #000;
+}
+
+.icon-btn:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }
 
 /* מרכז התוכן */
@@ -71,29 +93,33 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   margin-bottom: 10px;
 }
 
-.img-btn{
-  background: transparent;
-  border: none;
-  padding: 0;
+/* כפתורי מסך הבית: אותו סגנון כמו שאר הכפתורים, רק גדולים */
+.home-btn{
+  width: min(86vw, 420px);
+  padding: 14px 20px 12px;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: #E23636;
+  color: #fff;
+  font-family: var(--comic);
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--ink-lg) #000;
+  paint-order: stroke fill;
+  box-shadow: 0 6px 0 #000;
   cursor: pointer;
-  filter: drop-shadow(0 12px 18px rgba(0,0,0,0.45));
 }
 
-.img-btn img{
-  width: min(86vw, 640px);
-  height: auto;
-  display: block;
+.home-btn:active{
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #000;
 }
 
-.img-btn:disabled{
-  opacity: 0.45;
-  cursor: not-allowed;
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
-}
-
-/* Hover/Press (שדרוג קטן, גם במובייל זה נותן תחושת כפתור) */
-.img-btn:active img{
-  transform: scale(0.98);
+.home-btn:focus-visible{
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
 /* ===== GAME ===== */
@@ -119,9 +145,9 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  -webkit-text-stroke: 4px #000;
+  -webkit-text-stroke: var(--ink-lg) #000;
   paint-order: stroke fill;
-  text-shadow: 0 3px 4px rgba(0,0,0,0.45);
+  text-shadow: 0 2px 0 #000;
 }
 
 .level-label{
@@ -133,8 +159,9 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   position: static;
 }
 
-.icon-btn--small img{
+.icon-btn--small{
   width: 44px;
+  height: 44px;
 }
 
 /* כפתורים בסגנון של כפתורי מסך הבית: גלולה אדומה עם קו שחור וטקסט לבן עם קונטור */
@@ -148,16 +175,39 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   padding: 8px 16px;
   font-family: var(--comic);
   font-size: 18px;
+  line-height: 1.1;
   letter-spacing: 1px;
-  -webkit-text-stroke: 3px #000;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--ink-md) #000;
   paint-order: stroke fill;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+  box-shadow: var(--drop);
   cursor: pointer;
 }
 
 .text-btn:active,
 .next:active{
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #000;
+}
+
+/* פעולה משנית (למשל "Show tips again"): בלי מילוי, כדי לא להתחרות בכפתור הראשי */
+.link-btn{
+  align-self: center;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: rgba(255,255,255,0.8);
+  font: inherit;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link-btn:focus-visible{
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .text-btn:disabled{
@@ -194,7 +244,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font-weight: 800;
   letter-spacing: 1px;
   color: #fff;
-  -webkit-text-stroke: 3px #000;
+  -webkit-text-stroke: var(--ink-md) #000;
   paint-order: stroke fill;
   font-variant-numeric: tabular-nums;
 }
@@ -266,6 +316,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 }
 
 .modal-card{
+  max-height: calc(100svh - 32px);   /* גם במסך נמוך (טלפון לרוחב) הכל נגיש: החלון גולל */
+  overflow-y: auto;
   width: min(100%, 340px);
   display: flex;
   flex-direction: column;
@@ -275,13 +327,14 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   border-radius: 16px;
   background: #141414;
   color: #fff;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.6);
 }
 
 .modal-card h2{
   margin: 0 0 8px;
-  font-size: 24px;
+  font-size: 28px;
   letter-spacing: 1px;
+  text-align: center;
   text-transform: uppercase;
 }
 
@@ -393,18 +446,15 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 2px 0 #000) drop-shadow(0 3px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 0 #000);
 }
 
 .category-sub{
   margin: -6px 0 12px;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 16px;
   letter-spacing: 1px;
-  text-transform: uppercase;
   color: #fff;
-  -webkit-text-stroke: 3px #000;
-  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #000, 0 0 3px #000;
 }
 
 .group-soon{
@@ -416,9 +466,10 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   border: 2px solid #000;
   border-radius: 22px;
   background: #5a5657;
-  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-  color: rgba(255,255,255,0.7);
-  font-weight: 800;
+  box-shadow: var(--drop-card);
+  color: rgba(255,255,255,0.75);
+  font-family: var(--comic);
+  font-size: 20px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
@@ -445,7 +496,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   border-radius: 26px;
   overflow: hidden;
   background: #3a3637;
-  box-shadow: 0 10px 16px rgba(0,0,0,0.45);
+  box-shadow: var(--drop-card);
   cursor: pointer;
   font: inherit;
 }
@@ -461,7 +512,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 .level-card.is-locked{
   background: #5a5657;
-  box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+  box-shadow: var(--drop-card);
   cursor: not-allowed;
 }
 
@@ -530,7 +581,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   margin: 0;
   display: flex;
   gap: 18px;
-  align-items: center;
+  align-items: baseline;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -552,13 +603,18 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 }
 
 .win-row{
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
   align-self: stretch;
 }
 
 .win-row .text-btn{
-  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -614,7 +670,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   max-height: 70vh;
   border: 3px solid #ED1D24;
   border-radius: 6px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.6);
   background: #141414;
 }
 
@@ -651,12 +707,12 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 .level-label small{
   display: block;
   margin-top: -2px;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 2px;
   color: #ffc933;
   text-align: center;
-  -webkit-text-stroke: 3px #000;
-  paint-order: stroke fill;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 0 #000, 0 0 3px #000;
 }
 
 .diff-row{
@@ -677,18 +733,21 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   border-radius: 14px;
   background: #E23636;
   color: #fff;
-  font: inherit;
-  font-weight: 800;
+  font-family: var(--comic);
+  font-size: 20px;
   letter-spacing: 1px;
   text-transform: uppercase;
+  -webkit-text-stroke: var(--ink-md) #000;
+  paint-order: stroke fill;
+  box-shadow: var(--drop);
   cursor: pointer;
 }
 
 .diff-btn small{
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 14px;
   letter-spacing: 0.5px;
-  opacity: 0.85;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 0 #000;
 }
 
 .diff-btn.is-done{
@@ -711,13 +770,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   animation: shake 0.3s;
 }
 
-.win-row{
-  flex-wrap: wrap;
-}
 
-.win-row .text-btn{
-  min-width: 90px;
-}
 
 /* ===== ZOOM ===== */
 .zoom-ctrl{
@@ -750,7 +803,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font: inherit;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  -webkit-text-stroke: 3px #000;
+  -webkit-text-stroke: var(--ink-md) #000;
   paint-order: stroke fill;
   cursor: pointer;
 }
@@ -773,8 +826,9 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
     width: min(34vw, 280px);
     margin: 0;
   }
-  .img-btn img{
-    width: min(44vw, 400px);
+  .home-btn{
+    width: min(44vw, 380px);
+    font-size: 34px;
   }
 
   /* בחירת שלב: יותר כרטיסים בשורה */
@@ -793,8 +847,9 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   .level-label{
     font-size: 20px;
   }
-  .icon-btn--small img{
-    width: 36px;
+  .icon-btn--small{
+    width: 38px;
+    height: 38px;
   }
   #puzzleWrap{
     padding-top: 4px;
@@ -875,7 +930,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 .win-hint{
   flex-basis: 100%;
   text-align: center;
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: 1px;
   color: #ffc933;
 }
@@ -1268,9 +1323,9 @@ html, body{
 }
 
 @keyframes card-glow{
-  0%   { box-shadow: 0 0 0 0 rgba(255,201,51,0.95), 0 10px 16px rgba(0,0,0,0.45); }
-  60%  { box-shadow: 0 0 26px 8px rgba(255,201,51,0.7), 0 10px 16px rgba(0,0,0,0.45); }
-  100% { box-shadow: 0 0 0 0 rgba(255,201,51,0), 0 10px 16px rgba(0,0,0,0.45); }
+  0%   { box-shadow: 0 0 0 0 rgba(255,201,51,0.95), 0 4px 0 rgba(0,0,0,0.55); }
+  60%  { box-shadow: 0 0 26px 8px rgba(255,201,51,0.7), 0 4px 0 rgba(0,0,0,0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(255,201,51,0), 0 4px 0 rgba(0,0,0,0.55); }
 }
 
 @keyframes title-glow{
@@ -1290,6 +1345,9 @@ html, body{
   padding: 14px 16px 4px;
   scrollbar-width: none;
   width: min(100%, 860px);
+  /* דהייה בקצה מראה שיש עוד לשוניות לגלול אליהן */
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
   margin: 0 auto;
 }
 
@@ -1304,7 +1362,7 @@ html, body{
   color: #fff;
   font-size: 18px;
   letter-spacing: 1px;
-  -webkit-text-stroke: 3px #000;
+  -webkit-text-stroke: var(--ink-md) #000;
   paint-order: stroke fill;
   cursor: pointer;
 }
@@ -1317,4 +1375,13 @@ html, body{
 .level-tab:focus-visible{
   outline: 3px solid #fff;
   outline-offset: 2px;
+}
+
+/* הגדרות בטלפון לרוחב: שורות צפופות יותר כדי שהחלון ייכנס */
+@media (orientation: landscape) and (max-height: 540px){
+  .modal-card h2{ font-size: 22px; margin-bottom: 2px; }
+  .toggle-row{ padding: 6px 0; }
+  .modal-card .next{ margin-top: 6px; }
+  .modal-card{ padding: 12px 18px 16px; gap: 2px; }
+  .link-btn{ margin-top: 0; padding: 4px 8px; }
 }

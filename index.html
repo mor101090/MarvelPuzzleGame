@@ -12,19 +12,14 @@
   <!-- HOME SCREEN -->
   <main id="homeScreen" class="screen home">
     <button id="settingsBtn" class="icon-btn" aria-label="Settings" type="button" data-open-settings>
-      <img src="assets/ui/Preference.webp" alt="" />
+      <svg class="gear" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" stroke="#000" stroke-width="1" stroke-linejoin="round" d="M10.3 2h3.4l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6L2 13.7v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
     </button>
 
     <div class="home-content">
       <img class="home-logo" src="assets/ui/logo.webp" alt="Marvel Puzzle Game" />
 
-      <button id="playBtn" class="img-btn" type="button" aria-label="Play">
-        <img src="assets/ui/Play.webp" alt="PLAY" />
-      </button>
-
-      <button id="chooseLevelBtn" class="img-btn" type="button" aria-label="Choose Level">
-        <img src="assets/ui/ChooseLevel.webp" alt="CHOOSE LEVEL" />
-      </button>
+      <button id="playBtn" class="home-btn" type="button">Play</button>
+      <button id="chooseLevelBtn" class="home-btn" type="button">Choose level</button>
     </div>
   </main>
 
@@ -56,7 +51,7 @@
       <button id="backBtn" class="text-btn" type="button">← Back</button>
       <div id="levelLabel" class="level-label">LEVEL 1</div>
       <button class="icon-btn icon-btn--small" aria-label="Settings" type="button" data-open-settings>
-        <img src="assets/ui/Preference.webp" alt="" />
+        <svg class="gear" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" stroke="#000" stroke-width="1" stroke-linejoin="round" d="M10.3 2h3.4l.5 2.6 1.6.7 2.2-1.5 2.4 2.4-1.5 2.2.7 1.6 2.6.5v3.4l-2.6.5-.7 1.6 1.5 2.2-2.4 2.4-2.2-1.5-1.6.7-.5 2.6h-3.4l-.5-2.6-1.6-.7-2.2 1.5-2.4-2.4 1.5-2.2-.7-1.6L2 13.7v-3.4l2.6-.5.7-1.6-1.5-2.2 2.4-2.4 2.2 1.5 1.6-.7zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
       </button>
     </div>
 
@@ -114,7 +109,7 @@
         <input id="vibrationToggle" class="toggle" type="checkbox" />
       </label>
 
-      <button id="resetTipsBtn" class="text-btn" type="button">Show tips again</button>
+      <button id="resetTipsBtn" class="link-btn" type="button">Show tips again</button>
       <button id="closeSettingsBtn" class="next" type="button">DONE</button>
     </div>
   </div>
