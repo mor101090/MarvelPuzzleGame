@@ -7,7 +7,7 @@ Usage:  python3 tools/add_level.py path/to/picture.jpg [level-id]
 - level-id is the level number (levels are numbered 1, 2, 3, ...). It defaults to the file
   name without extension, so name the file by its number (e.g. 31.jpg -> level 31).
 - With --boss N the files go to assets/bosses/ instead of assets/levels/.
-- Writes assets/levels/<id>.webp          (max 1200px on the long side)
+- Writes assets/levels/<id>.webp          (max 1800px on the long side)
          assets/levels/thumbs/<id>.webp   (max 480px, for the level cards)
 - Tells you to raise LEVEL_COUNT in game.js.
 Needs Pillow:  pip install pillow
@@ -18,7 +18,7 @@ import sys
 from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SIZES = {"": (1200, 80), "thumbs": (480, 75)}  # folder -> (max side, quality)
+SIZES = {"": (1800, 80), "thumbs": (480, 75)}  # folder -> (max side, quality)
 
 
 def fit(im, max_side):

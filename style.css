@@ -145,6 +145,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 }
 
 .hud-moves{
+  white-space: nowrap;
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -173,13 +174,20 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   fill: #ffc933;
 }
 
-#boardViewport{
-  box-sizing: content-box;
+/* חלון שגולל כשהמסגרת (שגדלה עם הזום) גדולה מהמקום שיש במסך */
+#boardScroller{
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: none;    /* אצבע אחת = גרירת חלק, שתיים = זום */
   scrollbar-width: thin;
   scrollbar-color: #ED1D24 transparent;
+  max-width: 100%;
+}
+
+/* המסגרת האדומה: גדלה ומתכווצת יחד עם החלקים */
+#boardViewport{
+  box-sizing: content-box;
+  touch-action: none;
   background: #141414;
 }
 
@@ -302,6 +310,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* ===== LEVEL SELECT ===== */
 .levels{
+  grid-template-columns: minmax(0, 1fr); /* תוכן רחב לא מרחיב את כל הדף */
   background: #3a3637 url("assets/ui/comic_bg.png") center/cover no-repeat;
   color: #fff;
   align-content: start;
@@ -495,10 +504,6 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   font-size: 22px;
 }
 
-.new-best{
-  color: #ffc933;
-  font-size: 18px;
-}
 
 .win-card .next{
   margin-top: 6px;
@@ -596,8 +601,11 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 /* ===== HUD (narrow phones) ===== */
 @media (max-width: 360px){
-  .hud .star{ width: 22px; height: 22px; }
-  .hud-moves{ font-size: 17px; }
+  .hud{ gap: 6px; }
+  .hud .star{ width: 20px; height: 20px; }
+  .hud-moves{ font-size: 16px; }
+  .zoom-btn{ width: 30px; height: 30px; }
+  .zoom-level{ min-width: 32px; }
 }
 
 /* ===== DIFFICULTY ===== */
@@ -959,4 +967,19 @@ html, body{
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* מסכים צרים מאוד (320px): כותרת וכפתורים קטנים יותר כדי שהכל ייכנס */
+@media (max-width: 360px){
+  .levels-top{
+    padding: 10px 8px 0;
+    gap: 6px;
+  }
+  .levels-title{
+    font-size: 17px;
+  }
+  .levels-top .text-btn{
+    padding: 8px 9px;
+    font-size: 13px;
+  }
 }
