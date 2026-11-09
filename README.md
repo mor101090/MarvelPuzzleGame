@@ -39,3 +39,11 @@ Quick alternative for a single bad change: on GitHub open the merged pull reques
 
 Short tips (`tutorial.js`) show once each and are remembered on the device (`marvelPuzzle.tips`).
 The text of every tip is in the `TIPS` list at the top of `tutorial.js`. Settings has a "Show tips again" button.
+
+
+## Music
+
+- Normal music: `assets/audio/motif_hero.mp3`. Boss screens and boss levels: `assets/audio/boss.mp3`.
+- Add or replace a track (for example one made in Suno):
+  `python3 tools/add_music.py path/to/track.mp3 boss` (or `main`). Needs ffmpeg.
+- Until `boss.mp3` exists the normal music keeps playing on the boss screens.

@@ -1059,7 +1059,7 @@ html, body{
   60%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
 }
 
-/* פתיחת המנעול של הבוס על הכרטיס */
+/* המנעול של הבוס נשבר בברק: רעד, ברק, שני חצאים נפרדים ונופלים, והכרטיס נחשף */
 .boss-veil{
   position: absolute;
   inset: 0;
@@ -1068,52 +1068,87 @@ html, body{
   place-items: center;
   border-radius: inherit;
   background: #4a4647;
-  animation: veil-out 2.3s ease-in forwards;
+  animation: veil-out 2.5s ease-in forwards;
 }
 
-.boss-veil svg{
+.boss-veil > svg{
+  grid-area: 1 / 1;
   width: 46%;
   height: auto;
   overflow: visible;
   filter: drop-shadow(0 2px 0 #000);
-  animation: lock-pop 2.3s ease-in forwards;
 }
 
-.boss-veil .lock-shackle{
+.boss-veil .lock-half{
   transform-box: fill-box;
-  transform-origin: 100% 100%;
-  animation: shackle-open 2.3s ease-in-out forwards;
+  transform-origin: center;
 }
 
-.boss-veil .lock-body{
-  animation: lock-shake 2.3s ease-in-out forwards;
+.boss-veil .lock-half--l{ animation: half-l 2.5s ease-in forwards; }
+.boss-veil .lock-half--r{ animation: half-r 2.5s ease-in forwards; }
+
+@keyframes half-l{
+  0%, 3%    { transform: translateX(0) rotate(0deg); }
+  6%, 12%   { transform: translateX(-1.2px); }
+  9%, 15%   { transform: translateX(1.2px); }
+  18%       { transform: translateX(0) rotate(0deg); opacity: 1; }
+  100%      { transform: translate(-9px, 22px) rotate(-38deg); opacity: 0; }
 }
 
-@keyframes lock-shake{
-  0%, 6%    { transform: translateX(0); }
-  10%, 18%  { transform: translateX(-1.2px); }
-  14%, 22%  { transform: translateX(1.2px); }
-  26%, 100% { transform: translateX(0); }
+@keyframes half-r{
+  0%, 3%    { transform: translateX(0) rotate(0deg); }
+  6%, 12%   { transform: translateX(-1.2px); }
+  9%, 15%   { transform: translateX(1.2px); }
+  18%       { transform: translateX(0) rotate(0deg); opacity: 1; }
+  100%      { transform: translate(9px, 26px) rotate(42deg); opacity: 0; }
 }
 
-@keyframes shackle-open{
-  0%, 28%  { transform: translate(0, 0) rotate(0deg); }
-  45%, 100% { transform: translate(-1px, -3.5px) rotate(-38deg); }
+/* הברק עצמו */
+.boss-veil .lock-bolt{
+  width: 62%;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px #9fd8ff) drop-shadow(0 0 10px #4aa8ff);
+  animation: bolt-strike 2.5s linear forwards;
 }
 
-@keyframes lock-pop{
-  0%, 60%  { transform: scale(1); opacity: 1; }
-  100%     { transform: scale(1.5); opacity: 0; }
+@keyframes bolt-strike{
+  0%, 17%   { opacity: 0; }
+  18%       { opacity: 1; }
+  21%       { opacity: 0.15; }
+  24%       { opacity: 1; }
+  30%       { opacity: 0.3; }
+  34%       { opacity: 0.9; }
+  42%, 100% { opacity: 0; }
 }
 
 @keyframes veil-out{
-  0%, 60%  { opacity: 1; }
-  100%     { opacity: 0; }
+  0%, 55%   { opacity: 1; }
+  100%      { opacity: 0; }
+}
+
+/* הבזק לבן על כל המסך ברגע הברק */
+.lightning-flash{
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  pointer-events: none;
+  background: #fff;
+  opacity: 0;
+  animation: flash-strike 0.9s linear 0.45s forwards;
+}
+
+@keyframes flash-strike{
+  0%   { opacity: 0.9; }
+  12%  { opacity: 0.1; }
+  22%  { opacity: 0.75; }
+  60%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce){
-  .tip-anim i, .boss-veil, .boss-veil svg, .boss-veil .lock-shackle, .boss-veil .lock-body{ animation: none; }
-  .boss-veil{ display: none; }
+  .tip-anim i, .boss-veil, .boss-veil .lock-half, .boss-veil .lock-bolt{ animation: none; }
+  .boss-veil, .lightning-flash{ display: none; }
+}
 }
 
 /* מדריך על מסך נמוך (טלפון לרוחב): קטן יותר וגולל אם צריך */
