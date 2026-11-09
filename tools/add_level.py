@@ -19,7 +19,7 @@ import sys
 from PIL import Image, ImageChops
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SIZES = {"": (1800, 80), "thumbs": (480, 75)}  # folder -> (max side, quality)
+SIZES = {"": (1800, 80), "thumbs": (400, 70)}  # folder -> (max side, quality)
 
 
 def fit(im, max_side):
