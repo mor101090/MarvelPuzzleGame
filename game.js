@@ -330,15 +330,21 @@ function updateHud() {
 
 // שלב נפתח אם הוא הראשון, שהקודם לו נפתר, או שכבר נפתר בעצמו
 function isUnlocked(index) {
-  if (UNLOCK_ALL_LEVELS) return true;
-  return isGroupOpen(levels[index].category) && (index === 0 || isCompleted(index) || isCompleted(index - 1));
+  return UNLOCK_ALL_LEVELS || index === 0 || isCompleted(index) || isCompleted(index - 1);
 }
 
-// קבוצה (חוץ מהראשונה) נפתחת אחרי שמנצחים את הבוס של הקבוצה שלפניה (אם יש בוס כזה)
-function isGroupOpen(group) {
-  if (UNLOCK_ALL_LEVELS || group === 0) return true;
-  const def = typeof bosses !== "undefined" ? bosses[group - 1] : null;
-  return !def || (progress.boss[def.id] || 0) > 0;
+// הקבוצה הבאה נפתחת כשמסיימים את השלב האחרון בקבוצה שלפניה (שלב 10, 20...), באותו רגע שהבוס
+// של הקבוצה נפתח. שני הדברים לא תלויים זה בזה: אפשר להמשיך לשלבים הרגילים בלי לשחק בבוס
+function groupOpenedByProgress(group) {
+  const lastOfPrevious = group * LEVELS_PER_GROUP - 1;
+  return group > 0 && levels[lastOfPrevious] && isCompleted(lastOfPrevious) &&
+    levels.some(level => level.category === group);
+}
+
+// קבוצה שנפתחה ועוד לא הראו עליה את האנימציה (או -1)
+function pendingGroupReveal() {
+  const group = categories.findIndex(c => groupOpenedByProgress(c.id) && window.tutorialHook?.groupRevealPending(c.id));
+  return group;
 }
 
 // השלב הראשון שעוד לא נפתר (או האחרון אם סיימו הכל)
@@ -389,9 +395,8 @@ function showBoss(reveal = -1) {
   showScreen(bossScreen);
 }
 
-// reveal = מספר הקבוצה שנפתחה עכשיו (אחרי שניצחו את הבוס): מנגנים אנימציה ששלבים חדשים נפתחו
-function showLevels(reveal = -1) {
-  renderLevelSelect(reveal);
+function showLevels() {
+  renderLevelSelect(pendingGroupReveal());   // אם נפתחה קבוצה חדשה: אנימציה ששלבים חדשים נפתחו
   showScreen(levelScreen);
 }
 
@@ -455,8 +460,7 @@ function renderLevelSelect(reveal = -1) {
     const base = category.grid * category.grid;
     const sub = document.createElement("p");
     sub.className = "category-sub";
-    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces` +
-      (isGroupOpen(category.id) ? "" : ` · beat Boss ${category.id} to open`);
+    sub.textContent = `${base} · ${base * 2} · ${base * 4} pieces`;
     section.appendChild(sub);
 
     const grid = document.createElement("div");
