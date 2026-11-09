@@ -4,7 +4,7 @@ All notable changes to Marvel Puzzle Game are listed here, newest first.
 Versions follow [Semantic Versioning](https://semver.org/): new features bump the
 minor number (0.X.0), bug fixes only bump the patch number (0.0.X).
 
-## [0.29.0] (`@@0.29.0`) - Tips
+## [0.29.0] (`b0e32ba`) - Tips
 ### Added
 - **Short tips that show once each** (kept on the device), in a small card with a
   looping animation:
