@@ -9,7 +9,7 @@ Usage:  python3 tools/add_music.py path/to/track.mp3 boss
 - `main` writes assets/audio/motif_hero.mp3: the music of everything else.
 - The track is trimmed of trailing silence (so the loop has no gap), gets a short fade at
   the end, is leveled to the same loudness as the main music (so no track is louder than
-  another) and is saved as a 128 kbps MP3.
+  another) and is saved as a 96 kbps MP3.
 Needs ffmpeg.
 """
 import os
@@ -47,7 +47,7 @@ def main():
         capture_output=True, text=True).stdout.strip())
     ffmpeg("-i", trimmed, "-af",
            f"loudnorm=I={TARGET_LOUDNESS}:TP=-1.5:LRA=11,afade=t=out:st={max(duration - 0.6, 0):.2f}:d=0.6",
-           "-c:a", "libmp3lame", "-b:a", "128k", out)
+           "-c:a", "libmp3lame", "-b:a", "96k", out)
     os.remove(trimmed)
     print(f"{os.path.relpath(out, ROOT)}  {os.path.getsize(out) // 1024} KB  ({duration:.0f} s)")
 

@@ -179,7 +179,7 @@ window.tutorialHook = {
 
     setTimeout(() => {
       if (levelScreen.classList.contains("hidden")) return;
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       document.body.appendChild(banner);
       playSound("unlock");
       vibrate([30, 40, 30, 40, 90]);
