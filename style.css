@@ -1015,8 +1015,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   top: 0;
   pointer-events: none;           /* רק השברים עצמם תופסים לחיצה */
   will-change: transform;
-  /* קו כהה סביב כל מה שמאוחד, בלי קווים בין חלקים שהתחברו */
-  filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 2px 3px rgba(0,0,0,0.45));
+  /* בלי filter על כל קבוצה: זה הוריד את המשחק ל-13 פריימים לשנייה. צל רק על הקבוצה שגוררים */
 }
 
 .shard-group.is-turning{
@@ -1024,7 +1023,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 }
 
 .shard-group.is-dragging{
-  filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 8px 10px rgba(0,0,0,0.6)) brightness(1.12);
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.6));
 }
 
 .shard-group.flash{
@@ -1033,7 +1032,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 
 @keyframes shard-flash{
   0%   { filter: drop-shadow(0 0 10px #ffc933) brightness(1.7); }
-  100% { filter: drop-shadow(0 0 1.2px rgba(0,0,0,0.95)) drop-shadow(0 2px 3px rgba(0,0,0,0.45)); }
+  100% { filter: none; }
 }
 
 .shard{
@@ -1431,4 +1430,10 @@ html, body{
   .btn-icon{ width: 15px; height: 15px; }
   /* מסך צר מאוד: כפתורי מסך הניצחון אחד מתחת לשני */
   .win-row{ grid-template-columns: 1fr; }
+}
+
+/* כפתורי הכותרת באותו רוחב, כדי שהכותרת תהיה במרכז עם רווחים שווים משני הצדדים */
+.levels-top .text-btn{ min-width: 100px; }
+@media (max-width: 360px){
+  .levels-top .text-btn{ min-width: 84px; }
 }
