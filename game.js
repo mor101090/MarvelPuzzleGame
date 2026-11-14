@@ -55,7 +55,7 @@ const DIFFICULTIES = [
 // כל 10 שלבים = קבוצה חדשה עם יותר חלקים: הרשת בקל גדלה ב-1 (3x3, אחר כך 4x4, 5x5...)
 const LEVELS_PER_GROUP = 10;
 const FIRST_GRID = 3;
-const GROUP_NAMES = ["Rookie", "Hero", "Avenger", "Legend", "Cosmic"];
+const GROUP_NAMES = ["Rookie", "Hero", "Avenger", "Legend", "Cosmic", "Divine", "Celestial"];
 
 // שלב N = הקובץ assets/levels/N.webp (סדר השלבים הוא סדר המספרים בשם הקובץ).
 // כדי להוסיף שלבים: tools/add_level.py ואז מעלים את LEVEL_COUNT.
