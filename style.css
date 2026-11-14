@@ -3,18 +3,9 @@
 html, body { height: 100%; margin: 0; }
 body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
 
-/* פונט קומיקס לכותרות, כפתורים ומספרים: אותו מראה בכל מכשיר.
-   Bangers (SIL Open Font License), אותיות לטיניות בלבד, נשמר עם המשחק */
-@font-face {
-  font-family: "Bangers";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("assets/fonts/bangers-latin.woff2") format("woff2");
-}
-
+/* הפונט של המכשיר בכתב מודגש לכותרות, כפתורים ומספרים (הפונט המקורי של המשחק) */
 :root {
-  --comic: "Bangers", "Impact", "Arial Black", sans-serif;
+  --comic: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   /* בסיס היישור: שוליים אחידים מהצדדים, וגובה אחיד לכל פקד בשורה העליונה */
   --gutter: 16px;
   --control: 44px;
@@ -29,7 +20,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 .modal-card h2, .level-tag, .diff-btn, .win-stats, .unlock-banner, .level-tab,
 .category-sub, .card-stars b, .win, .viewer figcaption{
   font-family: var(--comic);
-  font-weight: 400;
+  font-weight: 800;
 }
 
 /* ===== Screens ===== */
@@ -105,7 +96,8 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   background: #E23636;
   color: #fff;
   font-family: var(--comic);
-  font-size: 42px;
+  font-weight: 800;
+  font-size: 32px;
   line-height: 1;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -175,6 +167,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   border-radius: 999px;
   padding: 8px 16px;
   font-family: var(--comic);
+  font-weight: 800;
   font-size: 18px;
   line-height: 1.1;
   letter-spacing: 1px;
@@ -413,7 +406,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
 .levels-top,
 .game-top{
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr)  /* צדדים שווים תמיד, אז הכותרת במרכז */;
   align-items: center;
   gap: 8px;
   padding: 14px var(--gutter) 0;
@@ -482,6 +475,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   box-shadow: var(--drop-card);
   color: rgba(255,255,255,0.75);
   font-family: var(--comic);
+  font-weight: 800;
   font-size: 20px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -747,6 +741,7 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-seri
   background: #E23636;
   color: #fff;
   font-family: var(--comic);
+  font-weight: 800;
   font-size: 20px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -1417,4 +1412,23 @@ html, body{
   height: 18px;
   flex: none;
   margin-left: -4px;
+}
+
+/* גדלים לפונט של המכשיר (רחב יותר מפונט קומיקס) */
+.levels-title{ font-size: 17px; letter-spacing: 0; }
+.levels-top .text-btn{ padding: 0 12px; }
+.level-label{ font-size: 22px; }
+.levels-top .text-btn,
+.game-top .text-btn{ font-size: 16px; padding: 0 14px; }
+.win-row .text-btn{ font-size: 14px; letter-spacing: 0; padding: 0 4px; height: 40px; }
+
+@media (max-width: 360px){
+  .levels-title{ font-size: 13px; letter-spacing: 0; }
+  .levels-top .text-btn{ padding: 0 9px; }
+  .level-label{ font-size: 19px; }
+  .levels-top .text-btn,
+  .game-top .text-btn{ font-size: 14px; padding: 0 10px; }
+  .btn-icon{ width: 15px; height: 15px; }
+  /* מסך צר מאוד: כפתורי מסך הניצחון אחד מתחת לשני */
+  .win-row{ grid-template-columns: 1fr; }
 }
