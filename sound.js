@@ -16,10 +16,25 @@ function getAudioCtx() {
     sfxBus = audioCtx.createGain();
     sfxBus.gain.value = SFX_VOLUME;
     sfxBus.connect(audioCtx.destination);
+    // כשהמערכת מחזירה את האודיו לעבוד, גם המוזיקה חוזרת
+    audioCtx.addEventListener("statechange", () => {
+      if (audioCtx.state === "running") updateMusic();
+    });
   }
-  // דפדפנים מתחילים את האודיו "מושהה" עד אינטראקציה ראשונה
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  resumeAudio();
   return audioCtx;
+}
+
+// כל מצב שאינו "running" צריך חידוש: "suspended" (לפני אינטראקציה ראשונה) וגם "interrupted"
+// (באייפון, אחרי שיוצאים לאפליקציה אחרת ויחזרו). רק "suspended" לא הספיק ולכן הקול לא חזר
+function resumeAudio() {
+  if (!audioCtx || audioCtx.state === "running") return;
+  try {
+    const result = audioCtx.resume();
+    result?.catch?.(() => {});
+  } catch {
+    // ננסה שוב בלחיצה הבאה
+  }
 }
 
 // פרץ רעש קצר (פיצוץ קונפטי): רעש לבן דרך מסנן, יורד מהר
@@ -286,6 +301,18 @@ document.addEventListener("pointerdown", unlockMusic);
 document.addEventListener("keydown", unlockMusic);
 // עוצרים כשהאפליקציה ברקע או שהמסך כבוי
 document.addEventListener("visibilitychange", updateMusic);
+
+// חזרה למשחק (מהודעה, משיחה, מאפליקציה אחרת): מחדשים את האודיו ואת המוזיקה
+function wakeAudio() {
+  if (document.hidden) return;
+  resumeAudio();
+  updateMusic();
+}
+document.addEventListener("visibilitychange", wakeAudio);
+window.addEventListener("pageshow", wakeAudio);
+window.addEventListener("focus", wakeAudio);
+// גם כל נגיעה במסך מנסה להחזיר את הקול, למקרה שהמערכת לא נתנה לחדש אוטומטית
+document.addEventListener("pointerdown", wakeAudio, true);
 
 // צליל לחיצה לכל כפתור במשחק. capture = נתפס לפני כל כפתור אחר,
 // גם כפתורים שעוצרים את האירוע (כמו כפתורי Easy/Medium/Hard)
