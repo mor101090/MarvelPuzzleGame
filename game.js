@@ -963,6 +963,60 @@ function shuffleTiles() {
   updateHud();
 }
 
+// =====================
+// אנימציית החלפה: החלקים גולשים למקום החדש במקום לקפוץ (FLIP)
+// =====================
+const SWAP_MS = 170;
+
+function captureTilePositions() {
+  const map = new Map();
+  tiles.forEach(tile => {
+    const r = tile.getBoundingClientRect();
+    map.set(tile, { left: r.left, top: r.top });
+  });
+  // החלקים שנגררו: נקודת ההתחלה היא הדמות שעל האצבע, לא המקום הישן שלהם בלוח
+  if (dragGhost) {
+    const gx = parseFloat(dragGhost.style.left), gy = parseFloat(dragGhost.style.top);
+    dragGroup.forEach((index, k) => {
+      const clone = dragGhost.children[k];
+      if (clone) map.set(tiles[index], { left: gx + parseFloat(clone.style.left), top: gy + parseFloat(clone.style.top) });
+    });
+  }
+  return map;
+}
+
+function animateTilesFrom(first) {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+  const moving = [];
+  tiles.forEach(tile => {
+    const from = first.get(tile);
+    if (!from) return;
+    const to = tile.getBoundingClientRect();
+    const dx = from.left - to.left, dy = from.top - to.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    tile.style.transition = "none";
+    tile.style.transform = `translate(${dx}px, ${dy}px)`;
+    tile.style.position = "relative";
+    tile.style.zIndex = 2;                 // החלקים שזזים מעל השאר
+    moving.push(tile);
+  });
+  if (!moving.length) return;
+
+  void puzzle.offsetWidth;                 // מחייב חישוב מקום לפני שמתחילים לגלוש
+  moving.forEach(tile => {
+    tile.style.transition = `transform ${SWAP_MS}ms cubic-bezier(.2,.9,.3,1)`;
+    tile.style.transform = "";
+  });
+  setTimeout(() => {
+    moving.forEach(tile => {
+      tile.style.transition = "";
+      tile.style.position = "";
+      tile.style.zIndex = "";
+    });
+  }, SWAP_MS + 40);
+}
+
 function renderTiles() {
   puzzle.innerHTML = "";
   tiles.forEach(tile => puzzle.appendChild(tile));
@@ -1095,6 +1149,15 @@ function startDrag(tile, pointerId, clientX, clientY) {
   document.body.appendChild(dragGhost);
   moveGhost(clientX, clientY);
 
+  // "הרמה": הדמות גדלה מעט ברכות כשתופסים אותה
+  dragGhost.style.transform = "scale(1)";
+  const lifted = dragGhost;
+  requestAnimationFrame(() => {
+    if (dragGhost !== lifted) return;
+    lifted.style.transition = "transform 90ms ease-out";
+    lifted.style.transform = "scale(1.06)";
+  });
+
   hoverCellKey = (src.r) + "," + (src.c);
   playSound("pick");
   vibrate(20);
@@ -1125,6 +1188,7 @@ function onPointerUp(e) {
   const group = dragGroup;
   const sourceIndex = tiles.indexOf(dragSourceTile);
   const target = cellUnderGrabbedTile();
+  const first = captureTilePositions();   // איפה כל חלק עכשיו (החלקים שנגררו - איפה שהאצבע שחררה אותם)
 
   cancelDrag();
 
@@ -1145,6 +1209,7 @@ function onPointerUp(e) {
   }
 
   renderTiles();
+  animateTilesFrom(first);
   moves++;
   updateHud();
 
