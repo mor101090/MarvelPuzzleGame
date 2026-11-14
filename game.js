@@ -966,7 +966,7 @@ function shuffleTiles() {
 // =====================
 // אנימציית החלפה: החלקים גולשים למקום החדש במקום לקפוץ (FLIP)
 // =====================
-const SWAP_MS = 170;
+const SWAP_MS = 260;
 
 function captureTilePositions() {
   const map = new Map();
@@ -999,6 +999,7 @@ function animateTilesFrom(first) {
     tile.style.transform = `translate(${dx}px, ${dy}px)`;
     tile.style.position = "relative";
     tile.style.zIndex = 2;                 // החלקים שזזים מעל השאר
+    tile.style.filter = "drop-shadow(0 4px 5px rgba(0,0,0,0.55))";   // צל בזמן התנועה
     moving.push(tile);
   });
   if (!moving.length) return;
@@ -1013,6 +1014,7 @@ function animateTilesFrom(first) {
       tile.style.transition = "";
       tile.style.position = "";
       tile.style.zIndex = "";
+      tile.style.filter = "";
     });
   }, SWAP_MS + 40);
 }
