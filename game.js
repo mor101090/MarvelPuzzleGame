@@ -322,14 +322,24 @@ function computePar() {
 }
 
 // כוכבים לפי מהלכים, ביחס לערבוב עצמו - כך שכל ערבוב הוגן באותה מידה.
-// 3 כוכבים: עד STAR3_FACTOR x par (+ מרווח), 2 כוכבים: עד STAR2_FACTOR x par (+ מרווח)
-const STAR3_FACTOR = 1.5, STAR3_SLACK = 2;
-const STAR2_FACTOR = 2.5, STAR2_SLACK = 4;
+const STAR3_SLACK = 2, STAR2_SLACK = 4;
+
+// ככל שיש יותר חלקים, שחקן אנושי צריך יותר מהלכים לכל חלק (הוא לא יודע איפה כל חלק שייך,
+// הוא מנסה ומתקן), בעוד שהמינימום (par) מניח ידיעה מושלמת. לכן הרף נפתח לפי מספר החלקים:
+// 9 חלקים: פי 1.5 ופי 2.5 מהמינימום. מ-99 חלקים ומעלה: פי 3 ופי 5.
+function starFactors() {
+  const extra = Math.max(0, tiles.length - 9);
+  return {
+    three: Math.min(3, 1.5 + extra / 60),
+    two: Math.min(5, 2.5 + extra / 36)
+  };
+}
 
 function starLimits() {
+  const f = starFactors();
   return {
-    three: Math.ceil(par * STAR3_FACTOR) + STAR3_SLACK,
-    two: Math.ceil(par * STAR2_FACTOR) + STAR2_SLACK
+    three: Math.ceil(par * f.three) + STAR3_SLACK,
+    two: Math.ceil(par * f.two) + STAR2_SLACK
   };
 }
 
