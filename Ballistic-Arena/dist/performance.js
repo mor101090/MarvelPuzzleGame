@@ -1,0 +1,9 @@
+// Records actual animation-frame intervals, never substitutes target FPS for a measurement.
+class FrameMonitor {
+ constructor(){this.samples=[];this.reportElapsed=0;this.badWindows=0;this.last=null;}
+ reset(){this.samples.length=0;this.reportElapsed=0;this.badWindows=0;this.last=null;}
+ record(ms){if(!Number.isFinite(ms)||ms<=0)return null;this.samples.push(ms);if(this.samples.length>180)this.samples.shift();this.reportElapsed+=ms;if(this.reportElapsed<500||this.samples.length<12)return null;this.reportElapsed=0;const sorted=this.samples.slice().sort((a,b)=>a-b),sum=this.samples.reduce((a,b)=>a+b,0),worst=sorted.slice(-Math.max(1,Math.ceil(sorted.length*.01)));this.last={fps:1000*this.samples.length/sum,p95:sorted[Math.ceil(sorted.length*.95)-1],low:1000/(worst.reduce((a,b)=>a+b,0)/worst.length),slow:this.samples.filter(x=>x>25).length,frames:this.samples.length};return this.last;}
+}
+window.FrameMonitor=FrameMonitor;
+const monitor=new FrameMonitor();let activeBefore=false,qualityCooldown=0;
+window.perfTracker={frame(ms,active){if(!active){if(activeBefore){monitor.reset();document.querySelector('#fps-main').textContent='FPS —';document.querySelector('#fps-detail').textContent='PAUSED';}activeBefore=false;return;}if(!activeBefore){monitor.reset();activeBefore=true;return;}qualityCooldown=Math.max(0,qualityCooldown-ms);const result=monitor.record(ms);if(!result)return;const main=document.querySelector('#fps-main'),detail=document.querySelector('#fps-detail');main.textContent=Math.round(result.fps)+' FPS';main.dataset.health=result.fps>=57?'good':result.fps>=45?'warn':'slow';detail.textContent=`1% LOW ${Math.round(result.low)} · P95 ${result.p95.toFixed(1)} ms · >25ms ${result.slow}/${result.frames}`;monitor.badWindows=result.fps<56||result.p95>25?monitor.badWindows+1:0;if(monitor.badWindows>=3&&qualityCooldown===0){window.arena3D?.reduceQuality?.();qualityCooldown=5000;monitor.badWindows=0;}},get stats(){return monitor.last;}};

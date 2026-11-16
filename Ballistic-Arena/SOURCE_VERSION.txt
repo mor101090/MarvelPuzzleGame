@@ -1,0 +1,4 @@
+Exported 2026-11-16
+Source commit: 7a6ff68051ce32a7e4ea61ed9b87bdfbb13884bc
+Live: https://mor-ballistic-arena.daintypeacock2.chatgpt.site
+Runtime source copied unchanged from the published commit. Export documentation and local runner added separately.

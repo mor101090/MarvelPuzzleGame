@@ -1,0 +1,10 @@
+{
+  "name": "ballistic-arena",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neon District browser game prototype",
+  "scripts": {
+    "start": "node scripts/serve.cjs",
+    "test": "node tests/rules.cjs && node tests/input.cjs && node tests/performance.cjs"
+  }
+}
